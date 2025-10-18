@@ -1,6 +1,6 @@
 from ninja import NinjaAPI
 from user.api import users as users_router
-api = NinjaAPI()
+api = NinjaAPI(title="Chat Bot API", version="1.0.0",description="Chat Bot API",docs_url="/docs")
 
 
 api.add_router("users/", users_router, tags=["users"])
