@@ -15,7 +15,7 @@ def register_user(request: HttpRequest, data: UserRegisterSchema):
     if User.objects.filter(email=data.email).exists():
         raise HttpError(400, "User already exists")
     
-    user = User.objects.create_user(
+    User.objects.create_user(
         email=data.email,   
         password=data.password, 
         first_name=data.first_name, 
