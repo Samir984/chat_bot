@@ -9,6 +9,6 @@ class Environment(BaseSettings):
     POSTGRES_HOST: str = "localhost"
     POSTGRES_PORT: int = 5432
     SECRET_KEY: str = "secretkey"
- 
-
+    GEMENI_API_KEY: str = "ZBRICK123"
+    AI_MODEL: str = "gemini-2.5-flash"
 ENV = Environment()

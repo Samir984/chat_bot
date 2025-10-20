@@ -13,6 +13,8 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 from pathlib import Path
 from datetime import timedelta
 from chat_bot.env import ENV
+
+from langchain_google_genai import ChatGoogleGenerativeAI
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -40,6 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     # local apps
     'user',
+    "chat",
     # third party apps
     'ninja_jwt',
     
@@ -133,6 +136,16 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Custom Auth User Model
 AUTH_USER_MODEL = 'user.User'
+
+# Initialize Gemini Model
+
+
+model = ChatGoogleGenerativeAI(
+    model=ENV.AI_MODEL,
+    google_api_key=ENV.GEMENI_API_KEY,
+    api_key=ENV.GEMENI_API_KEY,
+    temperature=0.7
+)
 
 
 # JWT Settings
