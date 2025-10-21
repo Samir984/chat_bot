@@ -11,4 +11,6 @@ class Environment(BaseSettings):
     SECRET_KEY: str = "secretkey"
     GEMENI_API_KEY: str = "ZBRICK123"
     AI_MODEL: str = "gemini-2.5-flash"
+    ACCESS_TOKEN_LIFETIME: int = 12
+    REFRESH_TOKEN_LIFETIME: int = 1
 ENV = Environment()
