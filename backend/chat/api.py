@@ -1,17 +1,22 @@
 from django.http import HttpRequest
 from django.shortcuts import get_object_or_404
+from typing import List
+import os
 
 from uuid import UUID
-from ninja import  Router
+from ninja import  Router, UploadedFile, File, Form
 from ninja_jwt.authentication import JWTAuth
-from chat.models import Conversation
+from chat.models import Conversation, RAGCollection, RAGDocument
+from chat.schema import CreateRAGCollectionSchema
 
 from chat_bot.settings import model
 from chat.schema import PublicChatRequestSchema, ChatResponseSchema, ChatRequestSchema, GenericSchema, SelectedConversationSchema, ConversationListResponseSchema               
-from chat.utils import build_messages_from_history
+from chat.utils import build_messages_from_history, validate_documents  
 
 
 chat = Router()
+conversation = Router()
+rag_collection = Router()
 
 # For unauthenticated users
 @chat.post("/public/", response={200: ChatResponseSchema})
@@ -45,15 +50,52 @@ def send_message(request: HttpRequest, data: ChatRequestSchema):
         return 400, GenericSchema(detail=str(e))
 
 
-@chat.get("/conversations/list/", response={200: list[ConversationListResponseSchema]},auth=JWTAuth())
+@conversation.get("/list/", response={200: list[ConversationListResponseSchema]},auth=JWTAuth())
 def get_user_conversations_list(request: HttpRequest):
-    print("Entered get_user_conversations_list")
     conversations = Conversation.objects.filter(user=request.auth).values("id", "conversation_title")
     print(conversations)
     return [ConversationListResponseSchema(conversation_id=conversation["id"], conversation_title=conversation["conversation_title"]) for conversation in conversations]
    
 
-@chat.get("/conversations/{conversation_id}/", response={200: SelectedConversationSchema}, auth=JWTAuth())
+@conversation.get("/{conversation_id}/", response={200: SelectedConversationSchema}, auth=JWTAuth())
 def get_conversation(request: HttpRequest, conversation_id: UUID):
     conversation = get_object_or_404(Conversation, id=conversation_id, user=request.auth)
     return SelectedConversationSchema(conversation_id=conversation.id, history=conversation.history)
+
+@conversation.delete("/{conversation_id}/", response={200: GenericSchema}, auth=JWTAuth())
+def delete_conversation(request: HttpRequest, conversation_id: UUID):
+    conversation = get_object_or_404(Conversation, id=conversation_id, user=request.auth)
+    conversation.delete()
+    return GenericSchema(detail="Conversation deleted successfully")
+
+
+
+@rag_collection.post("/", response={200: GenericSchema, 400: GenericSchema}, auth=JWTAuth())
+def create_rag_collection(request: HttpRequest, data: CreateRAGCollectionSchema, files: List[UploadedFile] = File(...)):
+    try:
+        user = request.auth  
+        
+        # Validate documents before creating collection
+        is_valid, error_message = validate_documents(files)
+        if not is_valid:
+            return 400, GenericSchema(detail=error_message)
+         
+        rag_collection = RAGCollection.objects.create(
+            rag_collection_name=data.rag_collection_name,
+            user=user
+        )
+        
+        documents_created = []
+        for file in files:
+            rag_document = RAGDocument.objects.create(
+                rag_collection=rag_collection,
+                document_name=file.name,
+                document_path=file,
+                is_indexed=False 
+            )
+            documents_created.append(rag_document)
+        
+        return 200, GenericSchema(detail="RAG collection created successfully")
+        
+    except Exception as e:
+        return 400, GenericSchema(detail=f"Error creating RAG collection: {str(e)}")

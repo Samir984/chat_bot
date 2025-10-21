@@ -1,7 +1,10 @@
-from langchain_core.messages import HumanMessage, AIMessage
-from chat.schema import MessageSchema
 from typing import Union, List, Dict, Any
+import os
+from ninja import UploadedFile
 
+from langchain_core.messages import HumanMessage, AIMessage
+
+from chat.schema import MessageSchema
 
 def build_messages_from_history(history: Union[List[MessageSchema], List[Dict[str, Any]]], prompt: str) -> list:
     messages = []
@@ -25,3 +28,34 @@ def build_messages_from_history(history: Union[List[MessageSchema], List[Dict[st
     messages.append(HumanMessage(content=prompt))
     
     return messages
+
+
+
+def validate_documents(files: List[UploadedFile]) -> tuple[bool, str]:
+    MAX_FILE_SIZE = 100 * 1024 * 1024  # 100MB in bytes
+    # Check if any files were provided
+    if not files:
+        return False, "No files provided. Please upload at least one PDF document."
+    
+    for file in files:
+       
+        if not file.name:
+            return False, "One or more files have no name. Please ensure all files have proper names."
+        
+     
+        if not file.name.lower().endswith('.pdf'):
+            return False, f"File '{file.name}' is not a PDF. Only PDF files are allowed."
+        
+        # Check file size
+        try:
+            file.seek(0, os.SEEK_END)  # Seek to end to get file size
+            file_size = file.tell()
+            file.seek(0)  # Reset file pointer to beginning
+            
+            if file_size > MAX_FILE_SIZE:
+                return False, f"File '{file.name}' is {file_size / (1024 * 1024):.2f}MB, which exceeds the 100MB limit."
+                
+        except Exception as e:
+            return False, f"Error reading file '{file.name}': {str(e)}"
+    
+    return True, ""

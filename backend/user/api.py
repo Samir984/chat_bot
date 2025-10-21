@@ -44,3 +44,17 @@ def login_user(request: HttpRequest, data: UserLoginSchema):
 def get_me(request: HttpRequest):
     user = request.auth
     return UserSchema(id=user.id, email=user.email, first_name=user.first_name, last_name=user.last_name)
+
+
+@users.get("/logout/", auth=JWTAuth())
+def logout_user(request: HttpRequest):
+    user = request.auth
+    refresh_token = RefreshToken.for_user(user)
+    refresh_token.blacklist()
+    
+    # Create response with success message
+    response = GenericSchema(detail="User logged out successfully")
+    response.delete_cookie('access_token')
+    response.delete_cookie('refresh_token')
+
+    return 200, response

@@ -10,10 +10,11 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import os
 from pathlib import Path
 from datetime import timedelta
-from chat_bot.env import ENV
 
+from chat_bot.env import ENV
 from langchain_google_genai import ChatGoogleGenerativeAI
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -128,6 +129,11 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+
+# Media files
+MEDIA_URL = 'media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -152,4 +158,21 @@ model = ChatGoogleGenerativeAI(
 NINJA_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(hours=ENV.ACCESS_TOKEN_LIFETIME),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=ENV.REFRESH_TOKEN_LIFETIME), 
+}
+
+# Storage Backend Settings
+STORAGES = {
+    'default': {
+        'BACKEND': 'storages.backends.s3boto3.S3Boto3Storage',
+        'OPTIONS': {
+            'bucket_name': ENV.AWS_STORAGE_BUCKET_NAME,
+            'region_name': ENV.AWS_STORAGE_REGION,
+             "access_key": ENV.AWS_ACCESS_KEY_ID,
+            "secret_key": ENV.AWS_SECRET_ACCESS_KEY,
+            "querystring_expire": 3600,
+        },
+    },
+    'staticfiles': {
+        'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage',
+    },
 }

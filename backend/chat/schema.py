@@ -27,5 +27,8 @@ class ConversationListResponseSchema(Schema):
     conversation_id: UUID
     conversation_title: str
 
+class CreateRAGCollectionSchema(Schema):
+    rag_collection_name: str
+
 class GenericSchema(Schema):
     detail: str
