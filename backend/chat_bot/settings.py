@@ -176,3 +176,18 @@ STORAGES = {
         'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage',
     },
 }
+
+# Redis Settings
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': f'redis://{ENV.REDIS_HOST}:{ENV.REDIS_PORT}/{ENV.REDIS_DB}',
+    },
+}
+
+# Celery Settings
+CELERY_BROKER_URL = f'redis://{ENV.REDIS_HOST}:{ENV.REDIS_PORT}/{ENV.REDIS_DB}'
+CELERY_RESULT_BACKEND = f'redis://{ENV.REDIS_HOST}:{ENV.REDIS_PORT}/{ENV.REDIS_DB}'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'

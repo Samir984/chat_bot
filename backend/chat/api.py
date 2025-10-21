@@ -7,7 +7,7 @@ from uuid import UUID
 from ninja import  Router, UploadedFile, File, Form
 from ninja_jwt.authentication import JWTAuth
 from chat.models import Conversation, RAGCollection, RAGDocument
-from chat.schema import CreateRAGCollectionSchema
+from chat.schema import CreateRAGCollectionSchema, RAGCollectionListSchema
 
 from chat_bot.settings import model
 from chat.schema import PublicChatRequestSchema, ChatResponseSchema, ChatRequestSchema, GenericSchema, SelectedConversationSchema, ConversationListResponseSchema               
@@ -69,7 +69,6 @@ def delete_conversation(request: HttpRequest, conversation_id: UUID):
     return GenericSchema(detail="Conversation deleted successfully")
 
 
-
 @rag_collection.post("/", response={200: GenericSchema, 400: GenericSchema}, auth=JWTAuth())
 def create_rag_collection(request: HttpRequest, data: CreateRAGCollectionSchema, files: List[UploadedFile] = File(...)):
     try:
@@ -99,3 +98,25 @@ def create_rag_collection(request: HttpRequest, data: CreateRAGCollectionSchema,
         
     except Exception as e:
         return 400, GenericSchema(detail=f"Error creating RAG collection: {str(e)}")
+
+
+@rag_collection.get("/list/", response={200: list[RAGCollectionListSchema]}, auth=JWTAuth())
+def list_user_rag_collections(request: HttpRequest):
+    user = request.auth
+    rag_collections = RAGCollection.objects.filter(user=user).prefetch_related('documents')
+    return [RAGCollectionListSchema(id=rag_collection.id, rag_collection_name=rag_collection.rag_collection_name, documents=rag_collection.documents.all()) for rag_collection in rag_collections]
+        
+        
+@rag_collection.get("/start-indexing/{rag_collection_id}/", response={200: GenericSchema}, auth=JWTAuth())
+def start_indexing(request: HttpRequest, rag_collection_id: int):
+    rag_collection = get_object_or_404(RAGCollection, id=rag_collection_id, user=request.auth).prefetch_related('documents')
+    is_all_documents_indexed = rag_collection.documents.all().filter(is_indexed=False).count() == 0
+
+    if is_all_documents_indexed:
+        return GenericSchema(detail="All documents are already indexed")
+    
+    for document in rag_collection.documents.all():
+        document.is_indexed = True
+        document.save()
+    
+    return GenericSchema(detail="Indexing started successfully")

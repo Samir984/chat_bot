@@ -22,4 +22,8 @@ class Environment(BaseSettings):
     AWS_ACCESS_KEY_ID: str = "***"
     AWS_SECRET_ACCESS_KEY: str = "***"
 
+    REDIS_HOST: str = "localhost"
+    REDIS_PORT: int = 6379
+    REDIS_DB: int = 0
+
 ENV = Environment()
