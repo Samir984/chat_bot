@@ -6,8 +6,7 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('chat', '0003_alter_conversation_options_ragcollection_ragdocument'),
+        ("chat", "0003_alter_conversation_options_ragcollection_ragdocument"),
     ]
 
-    operations = [
-    ]
+    operations = []

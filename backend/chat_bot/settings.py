@@ -15,7 +15,7 @@ from pathlib import Path
 from datetime import timedelta
 
 from chat_bot.env import ENV
-from langchain_google_genai import ChatGoogleGenerativeAI
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -35,55 +35,55 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
     # local apps
-    'user',
+    "user",
     "chat",
     # third party apps
-    'ninja_jwt',
-    
+    "ninja_jwt",
+    "django_celery_results",
 ]
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-ROOT_URLCONF = 'chat_bot.urls'
+ROOT_URLCONF = "chat_bot.urls"
 
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
             ],
         },
     },
 ]
 
-WSGI_APPLICATION = 'chat_bot.wsgi.application'
+WSGI_APPLICATION = "chat_bot.wsgi.application"
 
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
-   "default": {
+    "default": {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": ENV.POSTGRES_DB,
         "USER": ENV.POSTGRES_USER,
@@ -99,16 +99,16 @@ DATABASES = {
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
 
@@ -116,9 +116,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = "UTC"
 
 USE_I18N = True
 
@@ -128,66 +128,57 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+STATIC_URL = "static/"
+STATIC_ROOT = os.path.join(BASE_DIR, "static")
 
 # Media files
-MEDIA_URL = 'media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = "media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Custom Auth User Model
-AUTH_USER_MODEL = 'user.User'
-
-# Initialize Gemini Model
-
-
-model = ChatGoogleGenerativeAI(
-    model=ENV.AI_MODEL,
-    google_api_key=ENV.GEMENI_API_KEY,
-    api_key=ENV.GEMENI_API_KEY,
-    temperature=0.7
-)
-
+AUTH_USER_MODEL = "user.User"
 
 # JWT Settings
 NINJA_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(hours=ENV.ACCESS_TOKEN_LIFETIME),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=ENV.REFRESH_TOKEN_LIFETIME), 
+    "ACCESS_TOKEN_LIFETIME": timedelta(hours=ENV.ACCESS_TOKEN_LIFETIME),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=ENV.REFRESH_TOKEN_LIFETIME),
 }
 
 # Storage Backend Settings
 STORAGES = {
-    'default': {
-        'BACKEND': 'storages.backends.s3boto3.S3Boto3Storage',
-        'OPTIONS': {
-            'bucket_name': ENV.AWS_STORAGE_BUCKET_NAME,
-            'region_name': ENV.AWS_STORAGE_REGION,
-             "access_key": ENV.AWS_ACCESS_KEY_ID,
+    "default": {
+        "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+        "OPTIONS": {
+            "bucket_name": ENV.AWS_STORAGE_BUCKET_NAME,
+            "region_name": ENV.AWS_STORAGE_REGION,
+            "access_key": ENV.AWS_ACCESS_KEY_ID,
             "secret_key": ENV.AWS_SECRET_ACCESS_KEY,
             "querystring_expire": 3600,
         },
     },
-    'staticfiles': {
-        'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage',
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
     },
 }
 
 # Redis Settings
 CACHES = {
-    'default': {
-        'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': f'redis://{ENV.REDIS_HOST}:{ENV.REDIS_PORT}/{ENV.REDIS_DB}',
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": f"redis://{ENV.REDIS_HOST}:{ENV.REDIS_PORT}/{ENV.REDIS_DB}",
     },
 }
 
 # Celery Settings
-CELERY_BROKER_URL = f'redis://{ENV.REDIS_HOST}:{ENV.REDIS_PORT}/{ENV.REDIS_DB}'
-CELERY_RESULT_BACKEND = f'redis://{ENV.REDIS_HOST}:{ENV.REDIS_PORT}/{ENV.REDIS_DB}'
-CELERY_ACCEPT_CONTENT = ['json']
-CELERY_TASK_SERIALIZER = 'json'
-CELERY_RESULT_SERIALIZER = 'json'
+CELERY_BROKER_URL = f"redis://{ENV.REDIS_HOST}:{ENV.REDIS_PORT}/{ENV.REDIS_DB}"
+CELERY_RESULT_BACKEND = f"redis://{ENV.REDIS_HOST}:{ENV.REDIS_PORT}/{ENV.REDIS_DB}"
+# Use your Django database (ORM) as the result backend
+CELERY_RESULT_BACKEND = "django-db"
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"

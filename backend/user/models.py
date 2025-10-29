@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 
+
 class CustomerUserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
         if not email:
@@ -35,6 +36,3 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.get_full_name()
-        
-
-

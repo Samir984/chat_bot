@@ -6,4 +6,8 @@ django-storages
 boto3
 redis
 django-redis
+django-celery-results
 celery
+langchain-qdrant
+langchain-google-genai
+qdrant-client

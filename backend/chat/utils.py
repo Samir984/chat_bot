@@ -6,9 +6,12 @@ from langchain_core.messages import HumanMessage, AIMessage
 
 from chat.schema import MessageSchema
 
-def build_messages_from_history(history: Union[List[MessageSchema], List[Dict[str, Any]]], prompt: str) -> list:
+
+def build_messages_from_history(
+    history: Union[List[MessageSchema], List[Dict[str, Any]]], prompt: str
+) -> list:
     messages = []
-    
+
     for history_item in history:
         # Handle both ChatHistorySchema objects and dict objects from JSON
         if isinstance(history_item, dict):
@@ -19,16 +22,15 @@ def build_messages_from_history(history: Union[List[MessageSchema], List[Dict[st
             # ChatHistorySchema object from API
             role = history_item.role
             content = history_item.content
-        
+
         if role == "user":
             messages.append(HumanMessage(content=content))
         else:
             messages.append(AIMessage(content=content))
-    
-    messages.append(HumanMessage(content=prompt))
-    
-    return messages
 
+    messages.append(HumanMessage(content=prompt))
+
+    return messages
 
 
 def validate_documents(files: List[UploadedFile]) -> tuple[bool, str]:
@@ -36,26 +38,34 @@ def validate_documents(files: List[UploadedFile]) -> tuple[bool, str]:
     # Check if any files were provided
     if not files:
         return False, "No files provided. Please upload at least one PDF document."
-    
+
     for file in files:
-       
+
         if not file.name:
-            return False, "One or more files have no name. Please ensure all files have proper names."
-        
-     
-        if not file.name.lower().endswith('.pdf'):
-            return False, f"File '{file.name}' is not a PDF. Only PDF files are allowed."
-        
+            return (
+                False,
+                "One or more files have no name. Please ensure all files have proper names.",
+            )
+
+        if not file.name.lower().endswith(".pdf"):
+            return (
+                False,
+                f"File '{file.name}' is not a PDF. Only PDF files are allowed.",
+            )
+
         # Check file size
         try:
             file.seek(0, os.SEEK_END)  # Seek to end to get file size
             file_size = file.tell()
             file.seek(0)  # Reset file pointer to beginning
-            
+
             if file_size > MAX_FILE_SIZE:
-                return False, f"File '{file.name}' is {file_size / (1024 * 1024):.2f}MB, which exceeds the 100MB limit."
-                
+                return (
+                    False,
+                    f"File '{file.name}' is {file_size / (1024 * 1024):.2f}MB, which exceeds the 100MB limit.",
+                )
+
         except Exception as e:
             return False, f"Error reading file '{file.name}': {str(e)}"
-    
+
     return True, ""

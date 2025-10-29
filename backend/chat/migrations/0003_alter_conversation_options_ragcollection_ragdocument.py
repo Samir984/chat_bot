@@ -8,34 +8,63 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('chat', '0002_conversation_conversation_title'),
+        ("chat", "0002_conversation_conversation_title"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='conversation',
-            options={'ordering': ['-date_created']},
+            name="conversation",
+            options={"ordering": ["-date_created"]},
         ),
         migrations.CreateModel(
-            name='RAGCollection',
+            name="RAGCollection",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('rag_collection_name', models.CharField(max_length=255)),
-                ('date_created', models.DateTimeField(auto_now_add=True)),
-                ('date_modified', models.DateTimeField(auto_now=True)),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("rag_collection_name", models.CharField(max_length=255)),
+                ("date_created", models.DateTimeField(auto_now_add=True)),
+                ("date_modified", models.DateTimeField(auto_now=True)),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='RAGDocument',
+            name="RAGDocument",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('document_name', models.CharField(default='', max_length=255)),
-                ('document_path', models.FileField(upload_to='rag_documents/')),
-                ('is_indexed', models.BooleanField(default=False)),
-                ('date_created', models.DateTimeField(auto_now_add=True)),
-                ('rag_collection', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='documents', to='chat.ragcollection')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("document_name", models.CharField(default="", max_length=255)),
+                ("document_path", models.FileField(upload_to="rag_documents/")),
+                ("is_indexed", models.BooleanField(default=False)),
+                ("date_created", models.DateTimeField(auto_now_add=True)),
+                (
+                    "rag_collection",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="documents",
+                        to="chat.ragcollection",
+                    ),
+                ),
             ],
         ),
     ]

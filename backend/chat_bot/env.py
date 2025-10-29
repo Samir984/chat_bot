@@ -1,7 +1,8 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+
 class Environment(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env")
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
     DEBUG: bool = False
     POSTGRES_DB: str = "chatbot"
     POSTGRES_USER: str = "postgres"
@@ -25,5 +26,12 @@ class Environment(BaseSettings):
     REDIS_HOST: str = "localhost"
     REDIS_PORT: int = 6379
     REDIS_DB: int = 0
+
+    QDRANT_HOST: str = "localhost"
+    QDRANT_PORT: int = 6333
+    QDRANT_COLLECTION_NAME: str = "rag_documents_collection"
+
+    EMBEDDING_MODEL: str = "models/gemini-embedding-001"
+
 
 ENV = Environment()

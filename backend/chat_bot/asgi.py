@@ -11,6 +11,6 @@ import os
 
 from chat_bot.asgi import get_asgi_application
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'chat_bot.settings')
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "chat_bot.settings")
 
 application = get_asgi_application()
