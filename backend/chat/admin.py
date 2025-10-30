@@ -25,7 +25,7 @@ class RAGDocumentAdmin(admin.ModelAdmin):
     list_display = [
         "id",
         "rag_collection",
-        "document_name",
+        "unique_document_name",
         "document_path",
         "is_indexed",
         "date_created",

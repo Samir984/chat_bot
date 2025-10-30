@@ -45,7 +45,7 @@ class CreateRAGCollectionSchema(Schema):
 class RAGDocumentListSchema(ModelSchema):
     class Meta:
         model = RAGDocument
-        fields = ["id", "document_name", "document_path", "is_indexed"]
+        fields = ["id", "unique_document_name", "document_path", "is_indexed"]
 
 
 class RAGCollectionListSchema(ModelSchema):

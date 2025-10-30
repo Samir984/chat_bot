@@ -1,14 +1,15 @@
+from typing import List
+from uuid import UUID
+
 from django.http import HttpRequest
 from django.shortcuts import get_object_or_404
-from typing import List
-import os
+from django.db import transaction
 
-from uuid import UUID
 from ninja import Router, UploadedFile, File, Form
 from ninja_jwt.authentication import JWTAuth
 from chat.models import Conversation, RAGCollection, RAGDocument
 from chat.schema import CreateRAGCollectionSchema, RAGCollectionListSchema
-
+from chat.tasks import start_indexing_documents
 from chat.llm_service import llm_model
 from chat.schema import (
     PublicChatRequestSchema,
@@ -100,43 +101,7 @@ def delete_conversation(request: HttpRequest, conversation_id: UUID):
     conversation.delete()
     return GenericSchema(detail="Conversation deleted successfully")
 
-
-@rag_collection.post(
-    "/", response={200: GenericSchema, 400: GenericSchema}, auth=JWTAuth()
-)
-def create_rag_collection(
-    request: HttpRequest,
-    data: CreateRAGCollectionSchema,
-    files: List[UploadedFile] = File(...),
-):
-    try:
-        user = request.auth
-
-        # Validate documents before creating collection
-        is_valid, error_message = validate_documents(files)
-        if not is_valid:
-            return 400, GenericSchema(detail=error_message)
-
-        rag_collection = RAGCollection.objects.create(
-            rag_collection_name=data.rag_collection_name, user=user
-        )
-
-        documents_created = []
-        for file in files:
-            rag_document = RAGDocument.objects.create(
-                rag_collection=rag_collection,
-                document_name=file.name,
-                document_path=file,
-                is_indexed=False,
-            )
-            documents_created.append(rag_document)
-
-        return 200, GenericSchema(detail="RAG collection created successfully")
-
-    except Exception as e:
-        return 400, GenericSchema(detail=f"Error creating RAG collection: {str(e)}")
-
-
+   
 @rag_collection.get(
     "/list/", response={200: list[RAGCollectionListSchema]}, auth=JWTAuth()
 )
@@ -155,6 +120,63 @@ def list_user_rag_collections(request: HttpRequest):
     ]
 
 
+@rag_collection.post(
+    "/", response={200: GenericSchema, 400: GenericSchema}, auth=JWTAuth()
+)
+def create_rag_collection(
+    request: HttpRequest,
+    data: CreateRAGCollectionSchema,
+    files: List[UploadedFile] = File(...),
+):
+    try:
+        user = request.auth
+
+        # Validate documents before creating collection
+        is_valid, error_message = validate_documents(files)
+        if not is_valid:
+            return 400, GenericSchema(detail=error_message)
+        
+        exits_rag_collection = RAGCollection.objects.filter(rag_collection_name=data.rag_collection_name, user=user).exists()
+        if exits_rag_collection:
+            return 400, GenericSchema(detail="RAG collection already exists. Please use a different name.")
+
+        with transaction.atomic():
+            rag_collection = RAGCollection.objects.create(
+                rag_collection_name=data.rag_collection_name, user=user
+            )
+            for file in files:
+                RAGDocument.objects.create(
+                    rag_collection=rag_collection,
+                    original_document_name=file.name,
+                    document_path=file,
+                    is_indexed=False,
+                )
+
+        return 200, GenericSchema(detail="RAG collection created successfully")
+
+    except Exception as e:
+        return 400, GenericSchema(detail=f"Error creating RAG collection: {str(e)}")
+
+@rag_collection.put(
+    "/{rag_collection_id}/", response={200: GenericSchema, 400: GenericSchema}, auth=JWTAuth()
+)
+def update_rag_collection(request: HttpRequest, rag_collection_id: int,files: List[UploadedFile] = File(...)):
+        rag_collection = get_object_or_404(
+            RAGCollection, id=rag_collection_id, user=request.auth
+        )
+        is_valid, error_message = validate_documents(files)
+        if not is_valid:
+            return 400, GenericSchema(detail=error_message)           
+        with transaction.atomic():
+            for file in files:
+                RAGDocument.objects.create(
+                    rag_collection=rag_collection,
+                    original_document_name=file.name,
+                    document_path=file,
+                    is_indexed=False,
+                )
+        return 200, GenericSchema(detail="RAG collection updated successfully")
+
 @rag_collection.get(
     "/start-indexing/{rag_collection_id}/",
     response={200: GenericSchema},
@@ -163,7 +185,7 @@ def list_user_rag_collections(request: HttpRequest):
 def start_indexing(request: HttpRequest, rag_collection_id: int):
     rag_collection = get_object_or_404(
         RAGCollection, id=rag_collection_id, user=request.auth
-    ).prefetch_related("documents")
+    )
     is_all_documents_indexed = (
         rag_collection.documents.all().filter(is_indexed=False).count() == 0
     )
@@ -171,8 +193,8 @@ def start_indexing(request: HttpRequest, rag_collection_id: int):
     if is_all_documents_indexed:
         return GenericSchema(detail="All documents are already indexed")
 
-    for document in rag_collection.documents.all():
-        document.is_indexed = True
-        document.save()
+    # start indexing unindexed documents in background
+    start_indexing_documents.delay(rag_collection_id)
 
     return GenericSchema(detail="Indexing started successfully")
+
