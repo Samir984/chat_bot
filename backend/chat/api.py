@@ -18,8 +18,12 @@ from chat.schema import (
     GenericSchema,
     SelectedConversationSchema,
     ConversationListResponseSchema,
+    StartIndexingResponseSchema,
+    IndexingStatusResponseSchema,
 )
-from chat.utils import build_messages_from_history, validate_documents
+from chat.utils import build_messages_from_history, validate_documents, build_rag_system_message
+from chat.qdrant_client import get_vector_store
+from langchain_core.messages import SystemMessage
 
 chat = Router()
 conversation = Router()
@@ -37,7 +41,9 @@ def public_send_message(request: HttpRequest, data: PublicChatRequestSchema):
 # For authenticated users
 @chat.post("/", response={200: ChatResponseSchema, 400: GenericSchema}, auth=JWTAuth())
 def send_message(request: HttpRequest, data: ChatRequestSchema):
+    print("data", data)
     user = request.auth
+
     if data.conversation_id:
         conversation = Conversation.objects.get(id=data.conversation_id, user=user)
     else:
@@ -47,7 +53,46 @@ def send_message(request: HttpRequest, data: ChatRequestSchema):
         )
 
     try:
-        messages = build_messages_from_history(conversation.history, data.prompt)
+        messages = []
+        if data.collection_name:
+            rag_collection = RAGCollection.objects.filter(
+                rag_collection_name=data.collection_name, user=user
+            ).first()
+
+            if not rag_collection:
+                return 400, GenericSchema(
+                    detail=f"Collection with name '{data.collection_name}' not found or you don't have access to it."
+                )
+
+            qdrant_collection_name = rag_collection.qdrant_collection_name
+            if not qdrant_collection_name:
+                return 400, GenericSchema(
+                    detail=f"Collection '{data.collection_name}' does not have a Qdrant collection name configured."
+                )
+            vector_store = get_vector_store(qdrant_collection_name)
+            if not vector_store:
+                return 400, GenericSchema(
+                    detail=f"Qdrant collection '{data.collection_name}' not found"
+                )
+
+            # Retrieve more chunks to get better context (k=5 means 5 chunks)
+            results = vector_store.similarity_search(data.prompt, k=5)    
+
+            # Format results for the system message - limit context length to avoid token limits
+            context_chunks = [result.page_content for result in results]
+            context_text = "\n\n---\n\n".join(context_chunks)
+
+            # Build system message with context
+            system_content = build_rag_system_message(context_text)
+            messages.insert(0, SystemMessage(content=system_content))
+
+        # Now add the conversation history and current prompt
+        history_messages = build_messages_from_history(
+            conversation.history, data.prompt
+        )
+        messages.extend(history_messages)
+
+        print("messages", messages)
         message = llm_model.invoke(messages)
 
         if message.content:
@@ -115,6 +160,7 @@ def list_user_rag_collections(request: HttpRequest):
             id=rag_collection.id,
             rag_collection_name=rag_collection.rag_collection_name,
             documents=rag_collection.documents.all(),
+            qdrant_collection_name=rag_collection.qdrant_collection_name,
         )
         for rag_collection in rag_collections
     ]
@@ -189,7 +235,7 @@ def update_rag_collection(
 
 @rag_collection.get(
     "/start-indexing/{rag_collection_id}/",
-    response={200: GenericSchema},
+    response={200: GenericSchema, 202: StartIndexingResponseSchema},
     auth=JWTAuth(),
 )
 def start_indexing(request: HttpRequest, rag_collection_id: int):
@@ -201,9 +247,27 @@ def start_indexing(request: HttpRequest, rag_collection_id: int):
     )
 
     if is_all_documents_indexed:
-        return GenericSchema(detail="All documents are already indexed")
+        return 200, GenericSchema(detail="All documents are already indexed")
 
     # start indexing unindexed documents in background
-    start_indexing_documents.delay(rag_collection_id, rag_collection.vector_collection_name)
+    async_result = start_indexing_documents.delay(
+        rag_collection_id, rag_collection.qdrant_collection_name
+    )
 
-    return GenericSchema(detail="Indexing started successfully")
+    return 202, StartIndexingResponseSchema(task_id=async_result.id)
+
+
+@rag_collection.get(
+    "/indexing-status/{task_id}/",
+    response={200: IndexingStatusResponseSchema, 200: GenericSchema},
+    auth=JWTAuth(),
+)
+def get_indexing_status(request: HttpRequest, task_id: str):
+    async_result = start_indexing_documents.AsyncResult(task_id)
+    if not async_result.result:
+        return 200, GenericSchema(detail="No Indexing Task Found")
+    return 200, IndexingStatusResponseSchema(
+        status=async_result.status,
+        progress=async_result.meta.get("progress"),
+        message=async_result.meta.get("message"),
+    )

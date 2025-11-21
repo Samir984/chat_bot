@@ -69,3 +69,27 @@ def validate_documents(files: List[UploadedFile]) -> tuple[bool, str]:
             return False, f"Error reading file '{file.name}': {str(e)}"
 
     return True, ""
+
+
+def build_rag_system_message(context_text: str) -> str:
+    """
+    Builds a system message for RAG (Retrieval Augmented Generation) with context.
+    
+    Args:
+        context_text: The retrieved context from vector search
+        
+    Returns:
+        Formatted system message content with instructions for the LLM
+    """
+    return f"""You are a helpful assistant. You have access to the following context from the user's documents/resume. 
+
+IMPORTANT: You MUST use the information from the context below to answer the user's questions. The context contains relevant information about the user's experience, skills, education, and projects.
+
+Context from documents:
+{context_text}
+
+Instructions:
+- Answer questions based on the context provided above
+- Be specific and reference details from the context
+- If the answer is not in the context, say "I don't have that information in the provided context"
+- Do not make up information that is not in the context"""

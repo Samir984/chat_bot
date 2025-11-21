@@ -8,6 +8,17 @@ from chat.embedding_mode import embeddings_model as embeddings
 qdrant_client = QdrantClient(host=ENV.QDRANT_HOST, port=ENV.QDRANT_PORT)
 
 
+def get_vector_store(qdrant_collection_name: str):
+    if qdrant_client.collection_exists(collection_name=qdrant_collection_name):
+        return QdrantVectorStore(
+            client=qdrant_client,
+            collection_name=qdrant_collection_name,
+            embedding=embeddings,
+        )
+    else:
+        return None
+
+
 def get_or_create_vector_store(qdrant_collection_name: str):
     if qdrant_client.collection_exists(collection_name=qdrant_collection_name):
         return QdrantVectorStore(

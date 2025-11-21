@@ -8,33 +8,33 @@ from chat.models import RAGCollection, RAGDocument
 from chat.qdrant_client import get_or_create_vector_store
 
 
-
-@shared_task
-def start_indexing_documents(rag_collection_id: int, vector_collection_name: str):
+@shared_task(bind=True)
+def start_indexing_documents(self, rag_collection_id: int, qdrant_collection_name: str):
     # Import vector_store inside the function to avoid initializing embeddings at import time
-
     print("Starting indexing documents")
-    print(f"Rag collection ID: {rag_collection_id}")
+
+    self.update_state(state="PROGRESS", meta={"progress": 0})
 
     unindexed_documents = RAGDocument.objects.filter(
         rag_collection_id=rag_collection_id, is_indexed=False
     )
-    vector_store = get_or_create_vector_store(vector_collection_name)
-   
-    print(f"Found {unindexed_documents.count()} unindexed documents")
+    vector_store = get_or_create_vector_store(qdrant_collection_name)
 
     # Text splitter configuration
+    # chunk_size is in CHARACTERS, not words
+    # 1000 characters ≈ 150-200 words (more reasonable chunk size)
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=1000,
         chunk_overlap=200,
         length_function=len,
     )
 
+    total_documents = unindexed_documents.count()
+    each_document_progress_percentage = 100 / total_documents
     # Process each unindexed document
-    for document in unindexed_documents:
-        try:
-            print(f"Processing document: {document.original_document_name}")
 
+    for index, document in enumerate(unindexed_documents):
+        try:
             # Download document from S3 to temporary file
             with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_file:
                 temp_path = temp_file.name
@@ -45,14 +45,11 @@ def start_indexing_documents(rag_collection_id: int, vector_collection_name: str
             try:
                 # Load PDF document
                 loader = PyPDFLoader(temp_path)
-                print(f"Loading document: {temp_path},{loader}")
                 pages = loader.load()
-                print(
-                    f"Loaded {pages} pages from document: {document.original_document_name}"
-                )
 
                 # Split documents into chunks
                 chunks = text_splitter.split_documents(pages)
+                print("chunks", chunks)
 
                 # Add metadata to each chunk
                 for chunk in chunks:
@@ -68,30 +65,27 @@ def start_indexing_documents(rag_collection_id: int, vector_collection_name: str
                 # Add documents to Qdrant vector store
                 if chunks:
                     vector_store.add_documents(chunks)
-                    print(
-                        f"Indexed {len(chunks)} chunks from document: {document.original_document_name}"
-                    )
-
                 # Mark document as indexed
                 document.is_indexed = True
                 document.save()
-                print(
-                    f"Document {document.original_document_name} indexed successfully"
+                self.update_state(
+                    state="PROGRESS",
+                    meta={
+                        "progress": ((index + 1) * each_document_progress_percentage)
+                    },
                 )
 
             except Exception as e:
-                print(
-                    f"Error processing document {document.original_document_name}: {str(e)}"
-                )
                 # Don't mark as indexed if there was an error
+                self.update_state(state="FAILURE", meta={"message": str(e)})
                 continue
             finally:
-                # Clean up temporary file
+
                 if os.path.exists(temp_path):
                     os.unlink(temp_path)
 
         except Exception as e:
             print(f"Error indexing document {document.id}: {str(e)}")
             continue
-
-    print(f"Finished indexing documents for collection {rag_collection_id}")
+    print("Indexing documents completed")
+    self.update_state(state="SUCCESS", meta={"progress": 100})

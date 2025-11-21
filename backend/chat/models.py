@@ -28,11 +28,13 @@ class RAGCollection(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     date_created = models.DateTimeField(auto_now_add=True)
     date_modified = models.DateTimeField(auto_now=True)
-    vector_collection_name = models.CharField(max_length=255,unique=True)
+    qdrant_collection_name = models.CharField(max_length=255, unique=True, default="")
 
     def save(self, *args, **kwargs):
-        if not self.vector_collection_name:
-            self.vector_collection_name = f"{self.rag_collection_name}_{self.user.id}"
+        if not self.qdrant_collection_name:
+            self.qdrant_collection_name = (
+                f"{self.rag_collection_name}_{uuid.uuid4().hex}"
+            )
         super().save(*args, **kwargs)
 
     def __str__(self):

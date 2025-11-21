@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Literal
 
 from ninja import Schema
 from ninja import ModelSchema
@@ -25,6 +25,7 @@ class PublicChatRequestSchema(Schema):
 
 class ChatRequestSchema(Schema):
     conversation_id: Optional[UUID] = None
+    collection_name: Optional[str] = None
     prompt: str
 
 
@@ -53,7 +54,17 @@ class RAGCollectionListSchema(ModelSchema):
 
     class Meta:
         model = RAGCollection
-        fields = ["id", "rag_collection_name"]
+        fields = ["id", "rag_collection_name", "qdrant_collection_name"]
+
+
+class StartIndexingResponseSchema(Schema):
+    task_id: str
+
+
+class IndexingStatusResponseSchema(Schema):
+    status: Literal["PENDING", "PROGRESS", "SUCCESS", "FAILURE"]
+    progress: Optional[int] = None
+    message: Optional[str] = None
 
 
 class GenericSchema(Schema):
