@@ -101,7 +101,7 @@ def delete_conversation(request: HttpRequest, conversation_id: UUID):
     conversation.delete()
     return GenericSchema(detail="Conversation deleted successfully")
 
-   
+
 @rag_collection.get(
     "/list/", response={200: list[RAGCollectionListSchema]}, auth=JWTAuth()
 )
@@ -135,10 +135,14 @@ def create_rag_collection(
         is_valid, error_message = validate_documents(files)
         if not is_valid:
             return 400, GenericSchema(detail=error_message)
-        
-        exits_rag_collection = RAGCollection.objects.filter(rag_collection_name=data.rag_collection_name, user=user).exists()
+
+        exits_rag_collection = RAGCollection.objects.filter(
+            rag_collection_name=data.rag_collection_name, user=user
+        ).exists()
         if exits_rag_collection:
-            return 400, GenericSchema(detail="RAG collection already exists. Please use a different name.")
+            return 400, GenericSchema(
+                detail="RAG collection already exists. Please use a different name."
+            )
 
         with transaction.atomic():
             rag_collection = RAGCollection.objects.create(
@@ -157,25 +161,31 @@ def create_rag_collection(
     except Exception as e:
         return 400, GenericSchema(detail=f"Error creating RAG collection: {str(e)}")
 
+
 @rag_collection.put(
-    "/{rag_collection_id}/", response={200: GenericSchema, 400: GenericSchema}, auth=JWTAuth()
+    "/{rag_collection_id}/",
+    response={200: GenericSchema, 400: GenericSchema},
+    auth=JWTAuth(),
 )
-def update_rag_collection(request: HttpRequest, rag_collection_id: int,files: List[UploadedFile] = File(...)):
-        rag_collection = get_object_or_404(
-            RAGCollection, id=rag_collection_id, user=request.auth
-        )
-        is_valid, error_message = validate_documents(files)
-        if not is_valid:
-            return 400, GenericSchema(detail=error_message)           
-        with transaction.atomic():
-            for file in files:
-                RAGDocument.objects.create(
-                    rag_collection=rag_collection,
-                    original_document_name=file.name,
-                    document_path=file,
-                    is_indexed=False,
-                )
-        return 200, GenericSchema(detail="RAG collection updated successfully")
+def update_rag_collection(
+    request: HttpRequest, rag_collection_id: int, files: List[UploadedFile] = File(...)
+):
+    rag_collection = get_object_or_404(
+        RAGCollection, id=rag_collection_id, user=request.auth
+    )
+    is_valid, error_message = validate_documents(files)
+    if not is_valid:
+        return 400, GenericSchema(detail=error_message)
+    with transaction.atomic():
+        for file in files:
+            RAGDocument.objects.create(
+                rag_collection=rag_collection,
+                original_document_name=file.name,
+                document_path=file,
+                is_indexed=False,
+            )
+    return 200, GenericSchema(detail="RAG collection updated successfully")
+
 
 @rag_collection.get(
     "/start-indexing/{rag_collection_id}/",
@@ -194,7 +204,6 @@ def start_indexing(request: HttpRequest, rag_collection_id: int):
         return GenericSchema(detail="All documents are already indexed")
 
     # start indexing unindexed documents in background
-    start_indexing_documents.delay(rag_collection_id)
+    start_indexing_documents.delay(rag_collection_id, rag_collection.vector_collection_name)
 
     return GenericSchema(detail="Indexing started successfully")
-

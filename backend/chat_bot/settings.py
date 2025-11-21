@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 import os
+import platform
 from pathlib import Path
 from datetime import timedelta
 
@@ -183,3 +184,6 @@ CELERY_RESULT_BACKEND = "django-db"
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
+# Use solo pool executor for macOS compatibility (avoids fork() issues)
+# On Linux/Unix, use prefork for better performance
+CELERY_WORKER_POOL = "solo" if platform.system() == "Darwin" else "prefork"

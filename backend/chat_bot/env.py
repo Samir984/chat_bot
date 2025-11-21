@@ -29,7 +29,6 @@ class Environment(BaseSettings):
 
     QDRANT_HOST: str = "localhost"
     QDRANT_PORT: int = 6333
-    QDRANT_COLLECTION_NAME: str = "rag_documents_collection"
 
     EMBEDDING_MODEL: str = "models/gemini-embedding-001"
 

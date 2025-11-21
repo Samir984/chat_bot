@@ -7,6 +7,3 @@ llm_model = ChatGoogleGenerativeAI(
     api_key=ENV.GEMENI_API_KEY,
     temperature=0.7,
 )
-
-
-

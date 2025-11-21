@@ -10,4 +10,7 @@ django-celery-results
 celery
 langchain-qdrant
 langchain-google-genai
+langchain-community
+langchain-text-splitters
+pypdf
 qdrant-client

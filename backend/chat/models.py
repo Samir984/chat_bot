@@ -28,6 +28,12 @@ class RAGCollection(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     date_created = models.DateTimeField(auto_now_add=True)
     date_modified = models.DateTimeField(auto_now=True)
+    vector_collection_name = models.CharField(max_length=255,unique=True)
+
+    def save(self, *args, **kwargs):
+        if not self.vector_collection_name:
+            self.vector_collection_name = f"{self.rag_collection_name}_{self.user.id}"
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.rag_collection_name}"
@@ -38,18 +44,17 @@ class RAGDocument(models.Model):
         RAGCollection, related_name="documents", on_delete=models.CASCADE
     )
     original_document_name = models.CharField(max_length=255, default="")
-    unique_document_name = models.CharField(max_length=255,unique=True)
+    unique_document_name = models.CharField(max_length=255, unique=True)
 
-    
     def _upload_path_filename(self, filename: str):
-        print("filename",filename)
+        print("filename", filename)
         return f"rag_documents/{self.rag_collection.rag_collection_name}/{self.unique_document_name}"
-    
+
     def save(self, *args, **kwargs):
-       if not self.unique_document_name:
+        if not self.unique_document_name:
             base, ext = os.path.splitext(self.original_document_name or "document")
             self.unique_document_name = f"{base}_{uuid.uuid4().hex}{ext}"
-       super().save(*args, **kwargs)
+        super().save(*args, **kwargs)
 
     document_path = models.FileField(upload_to=_upload_path_filename)
     is_indexed = models.BooleanField(default=False)
