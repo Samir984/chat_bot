@@ -72,20 +72,9 @@ def validate_documents(files: List[UploadedFile]) -> tuple[bool, str]:
 
 
 def build_rag_system_message(context_text: str) -> str:
-    """
-    Builds a system message for RAG (Retrieval Augmented Generation) with context.
-    
-    Args:
-        context_text: The retrieved context from vector search
-        
-    Returns:
-        Formatted system message content with instructions for the LLM
-    """
-    return f"""You are a helpful assistant. You have access to the following context from the user's documents/resume. 
+    return f"""You are a helpful assistant. You have access to the following context. 
 
-IMPORTANT: You MUST use the information from the context below to answer the user's questions. The context contains relevant information about the user's experience, skills, education, and projects.
-
-Context from documents:
+IMPORTANT: You MUST use the information from the context below to answer the user's questions.
 {context_text}
 
 Instructions:

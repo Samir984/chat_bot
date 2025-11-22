@@ -1,5 +1,7 @@
 from typing import List
 from uuid import UUID
+import pprint
+
 
 from django.http import HttpRequest
 from django.shortcuts import get_object_or_404
@@ -21,7 +23,11 @@ from chat.schema import (
     StartIndexingResponseSchema,
     IndexingStatusResponseSchema,
 )
-from chat.utils import build_messages_from_history, validate_documents, build_rag_system_message
+from chat.utils import (
+    build_messages_from_history,
+    validate_documents,
+    build_rag_system_message,
+)
 from chat.qdrant_client import get_vector_store
 from langchain_core.messages import SystemMessage
 
@@ -74,14 +80,12 @@ def send_message(request: HttpRequest, data: ChatRequestSchema):
                 return 400, GenericSchema(
                     detail=f"Qdrant collection '{data.collection_name}' not found"
                 )
-
-            # Retrieve more chunks to get better context (k=5 means 5 chunks)
-            results = vector_store.similarity_search(data.prompt, k=5)    
+            results = vector_store.similarity_search(data.prompt, k=4)
+          
 
             # Format results for the system message - limit context length to avoid token limits
             context_chunks = [result.page_content for result in results]
             context_text = "\n\n---\n\n".join(context_chunks)
-
             # Build system message with context
             system_content = build_rag_system_message(context_text)
             messages.insert(0, SystemMessage(content=system_content))
@@ -92,7 +96,6 @@ def send_message(request: HttpRequest, data: ChatRequestSchema):
         )
         messages.extend(history_messages)
 
-        print("messages", messages)
         message = llm_model.invoke(messages)
 
         if message.content:
