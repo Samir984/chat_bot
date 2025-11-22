@@ -1,5 +1,17 @@
-import { Button } from "@/components/ui/button";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import Layout from "@/components/Layout";
+import Chat from "@/pages/Chat";
+
+const routes = [
+  {
+    path: "/",
+    element: <Layout />,
+    children: [{ index: true, element: <Chat /> }],
+  },
+];
+
+const router = createBrowserRouter(routes);
 
 export default function App() {
-  return <Button>Click me</Button>;
+  return <RouterProvider router={router} />;
 }
