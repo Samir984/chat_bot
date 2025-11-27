@@ -7,10 +7,10 @@ export default function Layout() {
   return (
     <SidebarProvider>
       <Sidebar />
-      <SidebarInset className="flex flex-col">
+      <SidebarInset className="flex flex-col px-2">
         <Header />
-        <main className="flex-1 overflow-auto bg-muted/30">
-          <div className="container mx-auto p-4 md:p-6 lg:p-8 max-w-7xl">
+        <main className="flex-1 overflow-hidden bg-background">
+          <div className="h-full w-full">
             <Outlet />
           </div>
         </main>
