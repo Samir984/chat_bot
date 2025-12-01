@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Send, Mic } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import CollectionSelector from "./CollectionSelector";
+import CollectionSelector from "@/components/collections/CollectionSelector";
 
 interface ChatInputProps {
   onSend: (message: string) => void;
