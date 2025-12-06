@@ -1,6 +1,6 @@
 import { useState } from "react";
 import MessageList from "@/components/MessageList";
-import ChatInput from "@/components/ChatInput";
+import ChatInput from "@/components/chat/ChatInput";
 
 interface Message {
   id: string;

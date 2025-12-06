@@ -14,7 +14,7 @@ class UserLoginSchema(Schema):
 
 
 class GoogleLoginSchema(Schema):
-    credential: str 
+    credential: str
 
 
 class GenericSchema(Schema):
@@ -26,7 +26,17 @@ class UserSchema(Schema):
     email: str
     first_name: str
     last_name: str
+    profile_picture_url: str | None
+    
 
 
 class LoginResponseSchema(Schema):
     user: UserSchema
+
+
+class GoogleLoginResponseSchema(Schema):
+    id: int
+    email: str
+    first_name: str
+    last_name: str
+    

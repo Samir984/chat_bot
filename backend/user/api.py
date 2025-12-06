@@ -59,18 +59,21 @@ def login_user(request: HttpRequest, data: UserLoginSchema):
 
     return response_obj
 
+import requests
 
 @users.post("/google-login/")
 def google_login(request: HttpRequest, data: GoogleLoginSchema):
-    print("data", data)
     try:
-        # Verify the token
-        id_info = id_token.verify_oauth2_token(
-            data.credential,
-            google_requests.Request(),
-            ENV.GOOGLE_OAUTH_CLIENT_ID,
+        google_response = requests.get(
+            "https://www.googleapis.com/oauth2/v3/userinfo",
+            params={"access_token": data.credential},
         )
+        
+        if not google_response.ok:
+            raise ValueError("Invalid Google token")
 
+        id_info = google_response.json()
+   
         email = id_info.get("email")
         first_name = id_info.get("given_name", "")
         last_name = id_info.get("family_name", "")
@@ -92,7 +95,13 @@ def google_login(request: HttpRequest, data: GoogleLoginSchema):
         access_token = str(refresh.access_token)
         refresh_token = str(refresh)
 
-        response = LoginResponseSchema(user=user)
+        response = UserSchema(
+            id=user.id,
+            email=user.email,
+            first_name=user.first_name,
+            last_name=user.last_name,
+            profile_picture_url=id_info.get("picture", None),
+        )
         response_obj = api.create_response(request, response, status=200)
         set_auth_cookies(response_obj, access_token, refresh_token)
 

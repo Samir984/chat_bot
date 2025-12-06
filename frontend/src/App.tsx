@@ -3,6 +3,7 @@ import { GoogleOAuthProvider } from "@react-oauth/google";
 import Layout from "@/components/Layout";
 import Chat from "@/pages/Chat";
 import Collections from "@/pages/Collections";
+import { AuthProvider } from "@/context/AuthProvider";
 
 const routes = [
   {
@@ -19,8 +20,12 @@ const router = createBrowserRouter(routes);
 
 export default function App() {
   return (
-    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_OAUTH_CLIENT_ID}>
-      <RouterProvider router={router} />
-    </GoogleOAuthProvider>
+    <AuthProvider>
+      <GoogleOAuthProvider
+        clientId={import.meta.env.VITE_GOOGLE_OAUTH_CLIENT_ID}
+      >
+        <RouterProvider router={router} />
+      </GoogleOAuthProvider>
+    </AuthProvider>
   );
 }
