@@ -7,17 +7,13 @@ import {
   type ReactNode,
 } from "react";
 
-interface User {
-  id: string;
-  email: string;
-  full_name: string;
-}
+import type { UserApiGoogleLogin200 } from "@/gen/types";
 
 interface AuthContextType {
   isAuthenticate: boolean;
   setIsAuthenticate: Dispatch<SetStateAction<boolean>>;
-  user: User | null;
-  setUser: Dispatch<SetStateAction<User | null>>;
+  user: UserApiGoogleLogin200 | null;
+  setUser: Dispatch<SetStateAction<UserApiGoogleLogin200 | null>>;
   handleLogin: () => void;
   handleLogout: () => void;
 }
@@ -26,7 +22,7 @@ export const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isAuthenticate, setIsAuthenticate] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<UserApiGoogleLogin200 | null>(null);
 
   const handleLogin = () => {
     setIsAuthenticate(true);

@@ -1,0 +1,1 @@
+{"properties":{"conversation_id":{"anyOf":[{"format":"uuid","type":"string"},{"type":"null"}],"title":"Conversation Id"},"content":{"title":"Content","type":"string"}},"required":["content"],"title":"ChatResponseSchema","type":"object","x-readme-ref-name":"ChatResponseSchema"}

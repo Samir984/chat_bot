@@ -1,0 +1,1 @@
+{"properties":{"role":{"enum":["user","ai"],"title":"RoleChoices","type":"string","x-readme-ref-name":"RoleChoices"},"content":{"title":"Content","type":"string"}},"required":["role","content"],"title":"MessageSchema","type":"object","x-readme-ref-name":"MessageSchema"}

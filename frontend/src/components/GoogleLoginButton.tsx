@@ -3,12 +3,13 @@ import { Google } from "@ridemountainpig/svgl-react";
 import { useGoogleLogin } from "@react-oauth/google";
 import { fetchApi } from "@/services/api";
 import { useAuth } from "@/context/AuthProvider";
+import type { UserApiGoogleLogin200 } from "@/gen/types";
 
 export default function GoogleLoginButton() {
   const { setUser, setIsAuthenticate } = useAuth();
   const login = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
-      const { data, error } = await fetchApi(
+      const { data, error } = await fetchApi<UserApiGoogleLogin200>(
         "/users/google-login/",
         "POST",
         JSON.stringify({
@@ -19,6 +20,9 @@ export default function GoogleLoginButton() {
       if (data) {
         setUser(data);
         setIsAuthenticate(true);
+      }
+      if (error) {
+        console.log(error);
       }
     },
     onError: () => console.log("Login Failed"),

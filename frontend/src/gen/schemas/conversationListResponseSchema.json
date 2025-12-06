@@ -1,0 +1,1 @@
+{"properties":{"conversation_id":{"format":"uuid","title":"Conversation Id","type":"string"},"conversation_title":{"title":"Conversation Title","type":"string"}},"required":["conversation_id","conversation_title"],"title":"ConversationListResponseSchema","type":"object","x-readme-ref-name":"ConversationListResponseSchema"}

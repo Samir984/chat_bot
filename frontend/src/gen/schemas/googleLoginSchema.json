@@ -1,0 +1,1 @@
+{"properties":{"credential":{"title":"Credential","type":"string"}},"required":["credential"],"title":"GoogleLoginSchema","type":"object","x-readme-ref-name":"GoogleLoginSchema"}
