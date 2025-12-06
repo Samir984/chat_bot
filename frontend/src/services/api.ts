@@ -39,7 +39,7 @@ export const fetchApi = async <T>(
     if (err.name === "AbortError") {
       return { data: null, error: "Aborted" };
     }
-    console.error(`Error Occurred! ❌ While fetching ${endpoint}:`, err);
+    console.error(`❌ Error Occurred!. While fetching ${endpoint}:`, err);
     return { data: null, error: err.message || "An unexpected error occurred" };
   }
 };

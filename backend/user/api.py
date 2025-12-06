@@ -61,16 +61,16 @@ def login_user(request: HttpRequest, data: UserLoginSchema):
 
 import requests
 
-@users.post("/google-login/")
+@users.post("/google-login/", response={200: UserSchema,400: GenericSchema})
 def google_login(request: HttpRequest, data: GoogleLoginSchema):
     try:
         google_response = requests.get(
             "https://www.googleapis.com/oauth2/v3/userinfo",
             params={"access_token": data.credential},
         )
-        
+
         if not google_response.ok:
-            raise ValueError("Invalid Google token")
+            return 400, GenericSchema(detail="Invalid Google token")
 
         id_info = google_response.json()
    
@@ -105,10 +105,10 @@ def google_login(request: HttpRequest, data: GoogleLoginSchema):
         response_obj = api.create_response(request, response, status=200)
         set_auth_cookies(response_obj, access_token, refresh_token)
 
-        return response_obj
+        return 200, response_obj
 
     except ValueError:
-        raise HttpError(400, "Invalid Google token")
+        return 400, GenericSchema(detail="Invalid Google token")
 
 
 @users.get("/get-me/", auth=JWTAuth())
