@@ -11,9 +11,17 @@ from user.schema import (
     UserLoginSchema,
     LoginResponseSchema,
     UserSchema,
+    GoogleLoginSchema,
 )
 from user.models import User
+from google.oauth2 import id_token
+from google.auth.transport import requests as google_requests
+from chat_bot.env import ENV
+from user.utils import set_auth_cookies
 
+from ninja import NinjaAPI, Router
+
+api = NinjaAPI()
 users = Router()
 
 
@@ -45,7 +53,53 @@ def login_user(request: HttpRequest, data: UserLoginSchema):
     access_token = str(refresh.access_token)
     refresh_token = str(refresh)
 
-    return LoginResponseSchema(user=user, access=access_token, refresh=refresh_token)
+    response = LoginResponseSchema(user=user)
+    response_obj = api.create_response(request, response, status=200)
+    set_auth_cookies(response_obj, access_token, refresh_token)
+
+    return response_obj
+
+
+@users.post("/google-login/")
+def google_login(request: HttpRequest, data: GoogleLoginSchema):
+    print("data", data)
+    try:
+        # Verify the token
+        id_info = id_token.verify_oauth2_token(
+            data.credential,
+            google_requests.Request(),
+            ENV.GOOGLE_OAUTH_CLIENT_ID,
+        )
+
+        email = id_info.get("email")
+        first_name = id_info.get("given_name", "")
+        last_name = id_info.get("family_name", "")
+
+        # Check if user exists
+        user = User.objects.filter(email=email).first()
+
+        if not user:
+            # Create user if not exists
+            user = User.objects.create_user(
+                email=email,
+                password=None,
+                first_name=first_name,
+                last_name=last_name,
+            )
+
+        # Generate JWT tokens
+        refresh = RefreshToken.for_user(user)
+        access_token = str(refresh.access_token)
+        refresh_token = str(refresh)
+
+        response = LoginResponseSchema(user=user)
+        response_obj = api.create_response(request, response, status=200)
+        set_auth_cookies(response_obj, access_token, refresh_token)
+
+        return response_obj
+
+    except ValueError:
+        raise HttpError(400, "Invalid Google token")
 
 
 @users.get("/get-me/", auth=JWTAuth())

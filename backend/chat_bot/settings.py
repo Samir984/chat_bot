@@ -32,6 +32,13 @@ DEBUG = ENV.DEBUG
 
 ALLOWED_HOSTS = []
 
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
+
+CORS_ALLOW_CREDENTIALS = True
+
 
 # Application definition
 
@@ -48,11 +55,13 @@ INSTALLED_APPS = [
     # third party apps
     "ninja_jwt",
     "django_celery_results",
+    "corsheaders",
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "ninja.compatibility.files.fix_request_files_middleware",
     "django.middleware.csrf.CsrfViewMiddleware",

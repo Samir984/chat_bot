@@ -14,3 +14,6 @@ langchain-community
 langchain-text-splitters
 pypdf
 qdrant-client
+google-auth
+requests
+django-cors-headers

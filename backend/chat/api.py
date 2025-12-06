@@ -81,7 +81,6 @@ def send_message(request: HttpRequest, data: ChatRequestSchema):
                     detail=f"Qdrant collection '{data.collection_name}' not found"
                 )
             results = vector_store.similarity_search(data.prompt, k=4)
-          
 
             # Format results for the system message - limit context length to avoid token limits
             context_chunks = [result.page_content for result in results]

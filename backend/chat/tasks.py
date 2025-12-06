@@ -49,7 +49,6 @@ def start_indexing_documents(self, rag_collection_id: int, qdrant_collection_nam
 
                 # Split documents into chunks
                 chunks = text_splitter.split_documents(pages)
-             
 
                 # Add metadata to each chunk
                 for chunk in chunks:

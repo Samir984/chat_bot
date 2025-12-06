@@ -32,5 +32,8 @@ class Environment(BaseSettings):
 
     EMBEDDING_MODEL: str = "models/gemini-embedding-001"
 
+    GOOGLE_OAUTH_CLIENT_ID: str = "***"
+    GOOGLE_OAUTH_CLIENT_SECRET: str = "***"
+
 
 ENV = Environment()

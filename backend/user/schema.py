@@ -13,6 +13,10 @@ class UserLoginSchema(Schema):
     password: str
 
 
+class GoogleLoginSchema(Schema):
+    credential: str 
+
+
 class GenericSchema(Schema):
     detail: str
 
@@ -26,5 +30,3 @@ class UserSchema(Schema):
 
 class LoginResponseSchema(Schema):
     user: UserSchema
-    access: str
-    refresh: str
