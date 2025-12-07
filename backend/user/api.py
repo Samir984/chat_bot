@@ -105,13 +105,13 @@ def google_login(request: HttpRequest, data: GoogleLoginSchema):
         response_obj = api.create_response(request, response, status=200)
         set_auth_cookies(response_obj, access_token, refresh_token)
 
-        return 200, response_obj
+        return response_obj
 
     except ValueError:
         return 400, GenericSchema(detail="Invalid Google token")
 
 
-@users.get("/get-me/", auth=JWTAuth())
+@users.get("/get-me/", response={200: UserSchema}, auth=JWTAuth())
 def get_me(request: HttpRequest):
     user = request.auth
     return UserSchema(
@@ -129,8 +129,9 @@ def logout_user(request: HttpRequest):
     refresh_token.blacklist()
 
     # Create response with success message
-    response = GenericSchema(detail="User logged out successfully")
+    response_schema = GenericSchema(detail="User logged out successfully")
+    response = api.create_response(request, response_schema, status=200)
     response.delete_cookie("access_token")
     response.delete_cookie("refresh_token")
 
-    return 200, response
+    return response

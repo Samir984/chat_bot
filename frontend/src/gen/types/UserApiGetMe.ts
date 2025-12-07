@@ -3,11 +3,12 @@
 * Do not edit manually.
 */
 
+import type { UserSchema } from "./UserSchema.ts";
 
 /**
  * @description OK
 */
-export type UserApiGetMe200 = any;
+export type UserApiGetMe200 = UserSchema;
 
 export type UserApiGetMeQueryResponse = UserApiGetMe200;
 

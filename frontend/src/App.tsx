@@ -4,6 +4,7 @@ import Layout from "@/components/Layout";
 import Chat from "@/pages/Chat";
 import Collections from "@/pages/Collections";
 import { AuthProvider } from "@/context/AuthProvider";
+import { Toaster } from "sonner";
 
 const routes = [
   {
@@ -25,6 +26,7 @@ export default function App() {
         clientId={import.meta.env.VITE_GOOGLE_OAUTH_CLIENT_ID}
       >
         <RouterProvider router={router} />
+        <Toaster />
       </GoogleOAuthProvider>
     </AuthProvider>
   );
