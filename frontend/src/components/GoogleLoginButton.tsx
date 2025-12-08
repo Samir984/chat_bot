@@ -17,9 +17,9 @@ export default function GoogleLoginButton() {
       const { data, error } = await fetchApi<UserApiGoogleLogin200>(
         "/users/google-login/",
         "POST",
-        JSON.stringify({
+        {
           credential: tokenResponse.access_token,
-        })
+        }
       );
 
       if (data) {

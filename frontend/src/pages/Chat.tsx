@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import MessageList from "@/components/MessageList";
 import ChatInput from "@/components/chat/ChatInput";
 import { useAuth } from "@/context/AuthProvider";
@@ -10,6 +10,7 @@ interface Message {
   id: string;
   role: "user" | "assistant";
   content: string;
+  interrupted?: boolean;
 }
 
 export default function Chat() {
@@ -17,31 +18,55 @@ export default function Chat() {
   const [isLoading, setIsLoading] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
 
-  const handleSend = async (content: string) => {
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  const handlePromptSubmit = async (text: string) => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+
     const userMsg: Message = {
       id: Date.now().toString(),
       role: "user",
-      content,
+      content: text,
     };
+
+    // Optimistically append message and keep ref updated
     setMessages((prev) => [...prev, userMsg]);
     setIsLoading(true);
 
-    let chatEndpoint = "/chat/public";
-    if (isAuthenticate) {
-      chatEndpoint = "/chat/";
-    }
+    const chatEndpoint = isAuthenticate ? "/chat/" : "/chat/public/";
+
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
+
+    const history = messages.map((message) => ({
+      role: message.role,
+      content: message.content,
+    }));
 
     const { data, error } = await fetchApi<ChatResponseSchema>(
       chatEndpoint,
       "POST",
-      JSON.stringify({
-        prompt: content,
-        history: messages.map((message) => ({
-          role: message.role,
-          content: message.content,
-        })),
-      })
+      { prompt: text, history },
+      abortController.signal
     );
+
+    if (abortController.signal.aborted) {
+      const stoppedMsg: Message = {
+        id: Date.now().toString(),
+        role: "assistant",
+        content: "You stopped the response",
+        interrupted: true,
+      };
+      setIsLoading(false);
+      setMessages((prev) => [...prev, stoppedMsg]);
+      if (abortControllerRef.current === abortController) {
+        abortControllerRef.current = null;
+      }
+      return;
+    }
 
     if (data) {
       const assistantMsg: Message = {
@@ -51,10 +76,22 @@ export default function Chat() {
       };
       setMessages((prev) => [...prev, assistantMsg]);
     }
+
     if (error) {
       toast.error(error);
     }
+
     setIsLoading(false);
+    if (abortControllerRef.current === abortController) {
+      abortControllerRef.current = null;
+    }
+  };
+
+  const abortCurrentRequest = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
   };
 
   return (
@@ -64,7 +101,11 @@ export default function Chat() {
       </div>
 
       <div className="p-4 sticky bottom-0 left-0 right-0">
-        <ChatInput onSend={handleSend} disabled={isLoading} />
+        <ChatInput
+          onSubmit={handlePromptSubmit}
+          isProcessingPreviousPrompt={isLoading}
+          abortCurrentRequest={abortCurrentRequest}
+        />
       </div>
     </div>
   );

@@ -4,9 +4,14 @@ import { Bot, User } from "lucide-react";
 interface MessageItemProps {
   role: "user" | "assistant";
   content: string;
+  interrupted?: boolean;
 }
 
-export default function MessageItem({ role, content }: MessageItemProps) {
+export default function MessageItem({
+  role,
+  content,
+  interrupted,
+}: MessageItemProps) {
   const isUser = role === "user";
 
   return (
@@ -29,10 +34,26 @@ export default function MessageItem({ role, content }: MessageItemProps) {
           "flex max-w-[80%] flex-col gap-2 rounded-2xl px-4 py-3 text-sm",
           isUser
             ? "bg-primary text-primary-foreground rounded-tr-sm"
-            : "bg-muted rounded-tl-sm"
+            : "rounded-tl-sm",
+          // interrupted assistant message styling
+          !isUser && interrupted
+            ? "bg-amber-50 border border-amber-200 text-amber-900"
+            : !isUser
+            ? "bg-muted"
+            : ""
         )}
       >
-        <div className="whitespace-pre-wrap">{content}</div>
+        {interrupted && !isUser && (
+          <div className="text-xs text-amber-700 font-medium">Stopped</div>
+        )}
+        <div
+          className={cn(
+            "whitespace-pre-wrap",
+            interrupted ? "italic opacity-90" : ""
+          )}
+        >
+          {content}
+        </div>
       </div>
     </div>
   );

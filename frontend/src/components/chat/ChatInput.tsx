@@ -4,11 +4,16 @@ import { Button } from "@/components/ui/button";
 import CollectionSelector from "@/components/collections/CollectionSelector";
 
 interface ChatInputProps {
-  onSend: (message: string) => void;
-  disabled?: boolean;
+  onSubmit: (prompt: string) => void;
+  isProcessingPreviousPrompt: boolean;
+  abortCurrentRequest: () => void;
 }
 
-export default function ChatInput({ onSend, disabled }: ChatInputProps) {
+export default function ChatInput({
+  onSubmit,
+  isProcessingPreviousPrompt,
+  abortCurrentRequest,
+}: ChatInputProps) {
   const [input, setInput] = useState("");
   const [selectedCollection, setSelectedCollection] = useState<string | null>(
     null
@@ -23,17 +28,19 @@ export default function ChatInput({ onSend, disabled }: ChatInputProps) {
     }
   };
 
-  const handleSend = () => {
-    if (input.trim() && !disabled) {
-      onSend(input);
+  const handleSumit = () => {
+    if (isProcessingPreviousPrompt === false) {
+      onSubmit(input);
       setInput("");
+    } else {
+      abortCurrentRequest();
     }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      handleSend();
+      handleSumit();
     }
   };
   useEffect(() => {
@@ -55,7 +62,6 @@ export default function ChatInput({ onSend, disabled }: ChatInputProps) {
           placeholder="Ask Anything"
           className="w-full resize-none bg-transparent text-base outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50 mb-4"
           rows={1}
-          disabled={disabled}
           style={{ minHeight: "24px", maxHeight: "200px" }}
         />
 
@@ -64,17 +70,15 @@ export default function ChatInput({ onSend, disabled }: ChatInputProps) {
             <CollectionSelector
               selectedCollection={selectedCollection}
               onCollectionSelect={setSelectedCollection}
-              disabled={disabled}
             />
           </div>
 
           <div className="flex items-center gap-2">
             {input.trim() ? (
               <Button
-                onClick={handleSend}
+                onClick={handleSumit}
                 size="icon"
                 className="h-9 w-9 rounded-full transition-all"
-                disabled={disabled}
               >
                 <Send size={18} />
               </Button>
@@ -83,7 +87,6 @@ export default function ChatInput({ onSend, disabled }: ChatInputProps) {
                 variant="ghost"
                 size="icon"
                 className="h-9 w-9 rounded-full hover:bg-accent"
-                disabled={disabled}
               >
                 <Mic size={20} />
               </Button>

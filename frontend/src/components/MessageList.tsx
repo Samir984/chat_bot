@@ -6,6 +6,7 @@ interface Message {
   id: string;
   role: "user" | "assistant";
   content: string;
+  interrupted?: boolean;
 }
 
 interface MessageListProps {
@@ -23,7 +24,12 @@ export default function MessageList({ messages, isLoading }: MessageListProps) {
   return (
     <div className="flex-1 overflow-y-auto p-4 space-y-4">
       {messages.map((msg) => (
-        <MessageItem key={msg.id} role={msg.role} content={msg.content} />
+        <MessageItem
+          key={msg.id}
+          role={msg.role}
+          content={msg.content}
+          interrupted={msg.interrupted}
+        />
       ))}
       {isLoading && <TypingIndicator />}
       <div ref={bottomRef} />
