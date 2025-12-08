@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Google } from "@ridemountainpig/svgl-react";
 import { useGoogleLogin } from "@react-oauth/google";
 import { fetchApi } from "@/services/api";
@@ -8,7 +9,8 @@ import { toast } from "sonner";
 import UserProfile from "@/components/UserProfile";
 
 export default function GoogleLoginButton() {
-  const { setUser, setIsAuthenticate, isAuthenticate, user } = useAuth();
+  const { setUser, setIsAuthenticate, isAuthenticate, user, isLoading } =
+    useAuth();
 
   const login = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
@@ -37,6 +39,11 @@ export default function GoogleLoginButton() {
       setUser(null);
     },
   });
+
+  if (isLoading) {
+    // Show skeleton with same size as the button
+    return <Skeleton className="h-10 w-10 rounded-full" />;
+  }
 
   if (isAuthenticate && user) {
     return <UserProfile user={user} />;

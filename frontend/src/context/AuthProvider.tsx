@@ -16,8 +16,7 @@ interface AuthContextType {
   setIsAuthenticate: Dispatch<SetStateAction<boolean>>;
   user: UserApiGoogleLogin200 | null;
   setUser: Dispatch<SetStateAction<UserApiGoogleLogin200 | null>>;
-  handleLogin: () => void;
-  handleLogout: () => void;
+  isLoading: boolean;
 }
 
 export const AuthContext = createContext<AuthContextType | null>(null);
@@ -25,14 +24,30 @@ export const AuthContext = createContext<AuthContextType | null>(null);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isAuthenticate, setIsAuthenticate] = useState(false);
   const [user, setUser] = useState<UserApiGoogleLogin200 | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleLogin = () => {
-    // need to be implement
-  };
+  useEffect(() => {
+    async function getMe() {
+      setIsLoading(true);
+      const { data, error } = await fetchApi<UserApiGetMe200>(
+        "/users/get-me/",
+        "GET"
+      );
 
-  const handleLogout = () => {
-    setIsAuthenticate(false);
-  };
+      if (data) {
+        setIsAuthenticate(true);
+        setUser(data);
+      }
+      if (error) {
+        setIsAuthenticate(false);
+        setUser(null);
+        setError(error);
+      }
+      setIsLoading(false);
+    }
+    getMe();
+  }, []);
 
   return (
     <AuthContext.Provider
@@ -41,8 +56,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setIsAuthenticate,
         user,
         setUser,
-        handleLogin,
-        handleLogout,
+        isLoading,
       }}
     >
       {children}

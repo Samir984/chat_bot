@@ -21,5 +21,5 @@ export type UserSchema = {
      * @type string
     */
     last_name: string;
-    profile_picture_url: (string | null);
+    profile_picture: (string | null);
 };

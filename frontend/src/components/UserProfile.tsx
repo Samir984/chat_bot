@@ -9,7 +9,7 @@ export default function UserProfile({ user }: UserProfileProps) {
     <div className="flex items-center gap-3 p-1 rounded-full border bg-background">
       <img
         src={
-          user.profile_picture_url ||
+          user.profile_picture ||
           `https://ui-avatars.com/api/?name=${user.first_name}+${user.last_name}`
         }
         alt={user.first_name}

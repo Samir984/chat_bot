@@ -8,7 +8,7 @@ from django.shortcuts import get_object_or_404
 from django.db import transaction
 
 from ninja import Router, UploadedFile, File, Form
-from ninja_jwt.authentication import JWTAuth
+from user.authentication import CookieJWTAuth
 from chat.models import Conversation, RAGCollection, RAGDocument
 from chat.schema import CreateRAGCollectionSchema, RAGCollectionListSchema
 from chat.tasks import start_indexing_documents
@@ -31,6 +31,7 @@ from chat.utils import (
 from chat.qdrant_client import get_vector_store
 from langchain_core.messages import SystemMessage
 
+cookie_auth = CookieJWTAuth()
 chat = Router()
 conversation = Router()
 rag_collection = Router()
@@ -45,7 +46,7 @@ def public_send_message(request: HttpRequest, data: PublicChatRequestSchema):
 
 
 # For authenticated users
-@chat.post("/", response={200: ChatResponseSchema, 400: GenericSchema}, auth=JWTAuth())
+@chat.post("/", response={200: ChatResponseSchema, 400: GenericSchema}, auth=cookie_auth)
 def send_message(request: HttpRequest, data: ChatRequestSchema):
     print("data", data)
     user = request.auth
@@ -110,7 +111,7 @@ def send_message(request: HttpRequest, data: ChatRequestSchema):
 
 
 @conversation.get(
-    "/list/", response={200: list[ConversationListResponseSchema]}, auth=JWTAuth()
+    "/list/", response={200: list[ConversationListResponseSchema]}, auth=cookie_auth
 )
 def get_user_conversations_list(request: HttpRequest):
     conversations = Conversation.objects.filter(user=request.auth).values(
@@ -127,7 +128,7 @@ def get_user_conversations_list(request: HttpRequest):
 
 
 @conversation.get(
-    "/{conversation_id}/", response={200: SelectedConversationSchema}, auth=JWTAuth()
+    "/{conversation_id}/", response={200: SelectedConversationSchema}, auth=cookie_auth
 )
 def get_conversation(request: HttpRequest, conversation_id: UUID):
     conversation = get_object_or_404(
@@ -139,7 +140,7 @@ def get_conversation(request: HttpRequest, conversation_id: UUID):
 
 
 @conversation.delete(
-    "/{conversation_id}/", response={200: GenericSchema}, auth=JWTAuth()
+    "/{conversation_id}/", response={200: GenericSchema}, auth=cookie_auth
 )
 def delete_conversation(request: HttpRequest, conversation_id: UUID):
     conversation = get_object_or_404(
@@ -150,7 +151,7 @@ def delete_conversation(request: HttpRequest, conversation_id: UUID):
 
 
 @rag_collection.get(
-    "/list/", response={200: list[RAGCollectionListSchema]}, auth=JWTAuth()
+    "/list/", response={200: list[RAGCollectionListSchema]}, auth=cookie_auth
 )
 def list_user_rag_collections(request: HttpRequest):
     user = request.auth
@@ -169,7 +170,7 @@ def list_user_rag_collections(request: HttpRequest):
 
 
 @rag_collection.post(
-    "/", response={200: GenericSchema, 400: GenericSchema}, auth=JWTAuth()
+    "/", response={200: GenericSchema, 400: GenericSchema}, auth=cookie_auth
 )
 def create_rag_collection(
     request: HttpRequest,
@@ -213,7 +214,7 @@ def create_rag_collection(
 @rag_collection.put(
     "/{rag_collection_id}/",
     response={200: GenericSchema, 400: GenericSchema},
-    auth=JWTAuth(),
+    auth=cookie_auth,
 )
 def update_rag_collection(
     request: HttpRequest, rag_collection_id: int, files: List[UploadedFile] = File(...)
@@ -238,7 +239,7 @@ def update_rag_collection(
 @rag_collection.get(
     "/start-indexing/{rag_collection_id}/",
     response={200: GenericSchema, 202: StartIndexingResponseSchema},
-    auth=JWTAuth(),
+    auth=cookie_auth,
 )
 def start_indexing(request: HttpRequest, rag_collection_id: int):
     rag_collection = get_object_or_404(
@@ -262,7 +263,7 @@ def start_indexing(request: HttpRequest, rag_collection_id: int):
 @rag_collection.get(
     "/indexing-status/{task_id}/",
     response={200: IndexingStatusResponseSchema, 200: GenericSchema},
-    auth=JWTAuth(),
+    auth=cookie_auth,
 )
 def get_indexing_status(request: HttpRequest, task_id: str):
     async_result = start_indexing_documents.AsyncResult(task_id)

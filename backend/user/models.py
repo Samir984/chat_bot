@@ -30,7 +30,7 @@ class User(AbstractUser):
     email = models.EmailField(unique=True)
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
-    
+    profile_picture = models.URLField(null=True, blank=True)
 
     objects = CustomerUserManager()
 
