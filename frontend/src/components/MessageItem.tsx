@@ -1,17 +1,10 @@
 import { cn } from "@/lib/utils";
 import { Bot, User } from "lucide-react";
+import type { ChatMessage } from "@/types/chat";
 
-interface MessageItemProps {
-  role: "user" | "assistant";
-  content: string;
-  interrupted?: boolean;
-}
+type MessageItemProps = Omit<ChatMessage, "id">;
 
-export default function MessageItem({
-  role,
-  content,
-  interrupted,
-}: MessageItemProps) {
+export default function MessageItem({ role, content, type }: MessageItemProps) {
   const isUser = role === "user";
 
   return (
@@ -35,21 +28,27 @@ export default function MessageItem({
           isUser
             ? "bg-primary text-primary-foreground rounded-tr-sm"
             : "rounded-tl-sm",
-          // interrupted assistant message styling
-          !isUser && interrupted
-            ? "bg-amber-50 border border-amber-200 text-amber-900"
+          // interrupted assistant message: subtle, greyed-out (not red)
+          !isUser && type === "INTERRUPTED"
+            ? "bg-muted/60 border border-dashed border-slate-200 text-muted-foreground"
+            : !isUser && type === "ERROR"
+            ? "bg-rose-50 border border-rose-200 text-rose-900"
             : !isUser
             ? "bg-muted"
             : ""
         )}
       >
-        {interrupted && !isUser && (
-          <div className="text-xs text-amber-700 font-medium">Stopped</div>
+        {type === "INTERRUPTED" && !isUser && (
+          <div className="text-xs text-muted-foreground/80 font-medium">
+            Stopped
+          </div>
         )}
         <div
           className={cn(
             "whitespace-pre-wrap",
-            interrupted ? "italic opacity-90" : ""
+            type === "INTERRUPTED"
+              ? "italic opacity-80 text-muted-foreground"
+              : ""
           )}
         >
           {content}

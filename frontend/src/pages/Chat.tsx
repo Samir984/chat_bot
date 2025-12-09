@@ -4,14 +4,9 @@ import ChatInput from "@/components/chat/ChatInput";
 import { useAuth } from "@/context/AuthProvider";
 import { fetchApi } from "@/services/api";
 import { toast } from "sonner";
-import type { ChatResponseSchema } from "@/gen/types";
-
-interface Message {
-  id: string;
-  role: "user" | "assistant";
-  content: string;
-  interrupted?: boolean;
-}
+import { roleChoicesEnum, type ChatResponseSchema } from "@/gen/types";
+import type { Message } from "@/types/chat";
+import { filterHistoryMessages } from "@/utils/global";
 
 export default function Chat() {
   const { isAuthenticate } = useAuth();
@@ -21,6 +16,10 @@ export default function Chat() {
   const abortControllerRef = useRef<AbortController | null>(null);
 
   const handlePromptSubmit = async (text: string) => {
+    if (text.trim().length === 0) {
+      return;
+    }
+
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
@@ -28,7 +27,7 @@ export default function Chat() {
 
     const userMsg: Message = {
       id: Date.now().toString(),
-      role: "user",
+      role: roleChoicesEnum.user,
       content: text,
     };
 
@@ -41,44 +40,45 @@ export default function Chat() {
     const abortController = new AbortController();
     abortControllerRef.current = abortController;
 
-    const history = messages.map((message) => ({
-      role: message.role,
-      content: message.content,
-    }));
-
     const { data, error } = await fetchApi<ChatResponseSchema>(
       chatEndpoint,
       "POST",
-      { prompt: text, history },
+      { prompt: text, history: filterHistoryMessages(messages) },
       abortController.signal
     );
 
     if (abortController.signal.aborted) {
       const stoppedMsg: Message = {
         id: Date.now().toString(),
-        role: "assistant",
+        role: roleChoicesEnum.ai,
         content: "You stopped the response",
-        interrupted: true,
+        type: "INTERRUPTED",
       };
-      setIsLoading(false);
+
       setMessages((prev) => [...prev, stoppedMsg]);
       if (abortControllerRef.current === abortController) {
         abortControllerRef.current = null;
       }
-      return;
     }
 
     if (data) {
       const assistantMsg: Message = {
         id: Date.now().toString(),
-        role: "assistant",
+        role: "ai",
         content: data.content,
       };
       setMessages((prev) => [...prev, assistantMsg]);
     }
 
-    if (error) {
-      toast.error(error);
+    if (error && !abortController.signal.aborted) {
+      toast.error(error.slice(0, 100).split(".")[0]);
+      const errorMsg: Message = {
+        id: Date.now().toString(),
+        role: "ai",
+        content: `Error: ${error.slice(0, 100).split(".")[0]}`,
+        type: "ERROR",
+      };
+      setMessages((prev) => [...prev, errorMsg]);
     }
 
     setIsLoading(false);

@@ -1,13 +1,7 @@
 import { useEffect, useRef } from "react";
 import MessageItem from "./MessageItem";
 import TypingIndicator from "./chat/TypingIndicator";
-
-interface Message {
-  id: string;
-  role: "user" | "assistant";
-  content: string;
-  interrupted?: boolean;
-}
+import type { Message } from "@/types/chat";
 
 interface MessageListProps {
   messages: Message[];
@@ -28,7 +22,7 @@ export default function MessageList({ messages, isLoading }: MessageListProps) {
           key={msg.id}
           role={msg.role}
           content={msg.content}
-          interrupted={msg.interrupted}
+          type={msg.type}
         />
       ))}
       {isLoading && <TypingIndicator />}

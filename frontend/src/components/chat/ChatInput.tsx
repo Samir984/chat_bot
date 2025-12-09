@@ -32,9 +32,9 @@ export default function ChatInput({
     if (isProcessingPreviousPrompt === false) {
       onSubmit(input);
       setInput("");
-    } else {
-      abortCurrentRequest();
+      return;
     }
+    abortCurrentRequest();
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
