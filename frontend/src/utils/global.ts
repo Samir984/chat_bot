@@ -17,6 +17,11 @@ export const filterHistoryMessages = (
       (message.type == "INTERRUPTED" || message.type == "ERROR")
     ) {
       filterHistoryMessages.pop();
+    } else {
+      filterHistoryMessages.push({
+        role: message.role,
+        content: message.content,
+      });
     }
   }
 

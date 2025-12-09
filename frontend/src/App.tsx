@@ -13,6 +13,7 @@ const routes = [
     children: [
       { index: true, element: <Chat /> },
       { path: "collections", element: <Collections /> },
+      { path: "/conversation/:id", element: <Chat /> },
     ],
   },
 ];
