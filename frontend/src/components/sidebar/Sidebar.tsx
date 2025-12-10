@@ -7,6 +7,7 @@ import { SidebarHistory } from "./SidebarHistory";
 import { SidebarNavigation } from "./SidebarNavigation";
 
 export default function Sidebar() {
+  
   return (
     <CustomeSidebar className="bg-sidebar border-r border-sidebar-border text-sidebar-foreground">
       <SidebarHeader className="px-3 py-4">

@@ -41,24 +41,18 @@ rag_collection = Router()
 @chat.post("/public/", response={200: ChatResponseSchema})
 def public_send_message(request: HttpRequest, data: PublicChatRequestSchema):
     messages = build_messages_from_history(data.history, data.prompt)
-    message = llm_model.invoke(messages)
+    message = llm_model.invoke(messages, max_retries=0)
     return ChatResponseSchema(content=message.content)
 
 
 # For authenticated users
 @chat.post("/", response={200: ChatResponseSchema, 400: GenericSchema}, auth=cookie_auth)
 def send_message(request: HttpRequest, data: ChatRequestSchema):
-    print("data", data)
     user = request.auth
+    conversation = None
 
     if data.conversation_id:
         conversation = Conversation.objects.get(id=data.conversation_id, user=user)
-    else:
-        conversation_title = data.prompt[:25]
-        conversation = Conversation.objects.create(
-            user=user, history=[], conversation_title=conversation_title
-        )
-
     try:
         messages = []
         if data.collection_name:
@@ -91,22 +85,42 @@ def send_message(request: HttpRequest, data: ChatRequestSchema):
             messages.insert(0, SystemMessage(content=system_content))
 
         # Now add the conversation history and current prompt
+
         history_messages = build_messages_from_history(
-            conversation.history, data.prompt
+            (conversation.history if conversation else []), data.prompt
         )
         messages.extend(history_messages)
-
-        message = llm_model.invoke(messages)
+        message = llm_model.invoke(messages, max_retries=0)
+    
+    
 
         if message.content:
             conversation.history.append({"role": "user", "content": data.prompt})
-            conversation.history.append({"role": "ai", "content": message.content})
-            conversation.save()
+            history_messages.append(
+                    {"role": "assistant", "content": message.content}
+                )
+            history_messages.append(
+                    {"role": "assistant", "content": message.content}
+                )
+            if not data.conversation_id:
+
+
+                conversation = Conversation.objects.create(
+                    user=user,
+                    conversation_title=data.prompt[:50],
+                    history=history_messages,   
+                )
+            else:
+                conversation.history = history_messages
+                conversation.save()
+    
+        
             return 200, ChatResponseSchema(
                 conversation_id=conversation.id, content=message.content
             )
 
     except Exception as e:
+        print("Error in send_message:", str(e))
         return 400, GenericSchema(detail=str(e))
 
 

@@ -16,13 +16,15 @@ export function useFetch<T>(url: string, method: string = "GET") {
       const { data, error } = await fetchApi<T>(
         url,
         method,
+        undefined,
         abortController.signal
       );
 
       if (data) {
         setData(data);
       }
-      if (error) {
+
+      if (error && !abortController.signal.aborted) {
         setError(error);
       }
       setIsLoading(false);
@@ -35,5 +37,5 @@ export function useFetch<T>(url: string, method: string = "GET") {
     };
   }, [url, method]);
 
-  return { data, error, isLoading };
+  return { data, setData, isLoading, error };
 }

@@ -29,6 +29,7 @@ export default function ChatInput({
   };
 
   const handleSumit = () => {
+    if (!input.trim()) return;
     if (isProcessingPreviousPrompt === false) {
       onSubmit(input);
       setInput("");
