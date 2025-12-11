@@ -1,1 +1,0 @@
-{"properties":{"rag_collection_name":{"title":"Rag Collection Name","type":"string"}},"required":["rag_collection_name"],"title":"CreateRAGCollectionSchema","type":"object","x-readme-ref-name":"CreateRAGCollectionSchema"}

@@ -3,7 +3,6 @@
 * Do not edit manually.
 */
 
-import type { CreateRAGCollectionSchema } from "./CreateRAGCollectionSchema.ts";
 import type { GenericSchema } from "./GenericSchema.ts";
 
 /**
@@ -18,13 +17,10 @@ export type ChatApiCreateRagCollection400 = GenericSchema;
 
 export type ChatApiCreateRagCollectionMutationRequest = {
     /**
-     * @type array
+     * @type string
     */
-    files: Blob[];
-    /**
-     * @type object
-    */
-    data: CreateRAGCollectionSchema;
+    rag_collection_name: string;
+    files?: (Blob[] | null);
 };
 
 export type ChatApiCreateRagCollectionMutationResponse = ChatApiCreateRagCollection200;

@@ -6,6 +6,7 @@ import {
   SidebarGroupLabel,
   SidebarMenu,
 } from "@/components/ui/sidebar";
+import { RenderData } from "@/components/RenderData";
 import type { ConversationListResponseSchema } from "@/gen";
 import { useFetch } from "@/hooks/useFetch";
 
@@ -28,23 +29,16 @@ export function SidebarHistory() {
         </SidebarGroupLabel>
         <SidebarGroupContent>
           <SidebarMenu className="space-y-0.5">
-            {isLoading ? (
-              <div className="px-2 py-2 text-sm text-muted-foreground">
-                Loading…
-              </div>
-            ) : error ? (
-              <div className="px-2 py-2 text-sm text-rose-500">
-                Unable to load recent conversations
-              </div>
-            ) : recent.length === 0 ? (
-              <div className="px-2 py-2 text-sm text-muted-foreground">
-                No recent conversations
-              </div>
-            ) : (
-              recent.map((chat) => (
-                <SidebarHistoryItem key={chat.conversation_id} chat={chat} />
-              ))
-            )}
+            <RenderData
+              data={recent}
+              isLoading={isLoading}
+              error={error}
+              RenderItems={(data) =>
+                data.map((chat) => (
+                  <SidebarHistoryItem key={chat.conversation_id} chat={chat} />
+                ))
+              }
+            />
           </SidebarMenu>
         </SidebarGroupContent>
       </SidebarGroup>

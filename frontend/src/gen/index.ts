@@ -11,7 +11,6 @@ export type { ChatApiUpdateRagCollectionPathParams, ChatApiUpdateRagCollection20
 export type { ChatRequestSchema } from "./types/ChatRequestSchema.ts";
 export type { ChatResponseSchema } from "./types/ChatResponseSchema.ts";
 export type { ConversationListResponseSchema } from "./types/ConversationListResponseSchema.ts";
-export type { CreateRAGCollectionSchema } from "./types/CreateRAGCollectionSchema.ts";
 export type { GenericSchema } from "./types/GenericSchema.ts";
 export type { GoogleLoginSchema } from "./types/GoogleLoginSchema.ts";
 export type { MessageSchema } from "./types/MessageSchema.ts";

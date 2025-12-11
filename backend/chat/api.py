@@ -228,22 +228,28 @@ def create_rag_collection(
         return 400, GenericSchema(detail=f"Error creating RAG collection: {str(e)}")
 
 
-@rag_collection.put(
+@rag_collection.patch(
     "/{rag_collection_id}/",
     response={200: GenericSchema, 400: GenericSchema},
     auth=cookie_auth,
 )
 def update_rag_collection(
-    request: HttpRequest, rag_collection_id: int, files: List[UploadedFile] = File(...)
+    request: HttpRequest,
+    rag_collection_id: int,
+    rag_collection_name: Optional[str] = Form(None),
+    files: Optional[List[UploadedFile]] = File(None),
 ):
     rag_collection = get_object_or_404(
         RAGCollection, id=rag_collection_id, user=request.auth
     )
-    is_valid, error_message = validate_documents(files)
+    if rag_collection_name:
+        rag_collection.rag_collection_name = rag_collection_name
+        rag_collection.save()
+    is_valid, error_message = validate_documents(files or [], allow_empty=True)
     if not is_valid:
         return 400, GenericSchema(detail=error_message)
     with transaction.atomic():
-        for file in files:
+        for file in files or []:
             RAGDocument.objects.create(
                 rag_collection=rag_collection,
                 original_document_name=file.name,

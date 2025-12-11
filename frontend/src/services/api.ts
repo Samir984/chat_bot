@@ -1,4 +1,6 @@
 const BASE_URI = import.meta.env.VITE_BACKEND_URI;
+import type { DataFormat } from "@/types/utils";
+import { computeHeaders, computeBody } from "@/utils/helper";
 
 interface ApiResponse<T> {
   data: T | null;
@@ -8,16 +10,15 @@ interface ApiResponse<T> {
 export const fetchApi = async <T>(
   endpoint: string,
   method: string = "GET",
-  body?: any,
-  signal?: AbortSignal
+  body?: unknown,
+  signal?: AbortSignal,
+  dataFormat?: DataFormat
 ): Promise<ApiResponse<T>> => {
   try {
     const response = await fetch(`${BASE_URI}/api${endpoint}`, {
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: computeHeaders(dataFormat),
       method,
-      body: JSON.stringify(body),
+      body: computeBody(body, dataFormat) as BodyInit | null,
       credentials: "include",
       signal,
     });

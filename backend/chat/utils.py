@@ -33,10 +33,10 @@ def build_messages_from_history(
     return messages
 
 
-def validate_documents(files: List[UploadedFile]) -> tuple[bool, str]:
+def validate_documents(files: List[UploadedFile], allow_empty: bool = False) -> tuple[bool, str]:
     MAX_FILE_SIZE = 100 * 1024 * 1024  # 100MB in bytes
     # Check if any files were provided
-    if not files:
+    if not files and not allow_empty:
         return False, "No files provided. Please upload at least one PDF document."
 
     for file in files:

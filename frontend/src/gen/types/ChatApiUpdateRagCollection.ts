@@ -23,10 +23,8 @@ export type ChatApiUpdateRagCollection200 = GenericSchema;
 export type ChatApiUpdateRagCollection400 = GenericSchema;
 
 export type ChatApiUpdateRagCollectionMutationRequest = {
-    /**
-     * @type array
-    */
-    files: Blob[];
+    rag_collection_name?: (string | null);
+    files?: (Blob[] | null);
 };
 
 export type ChatApiUpdateRagCollectionMutationResponse = ChatApiUpdateRagCollection200;

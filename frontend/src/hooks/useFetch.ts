@@ -5,6 +5,10 @@ export function useFetch<T>(url: string, method: string = "GET") {
   const [isLoading, setIsLoading] = useState(true);
   const [data, setData] = useState<T | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [triggerRefetch, setTriggerRefetch] = useState(0);
+  const refetch = () => {
+    setTriggerRefetch((prev) => prev + 1);
+  };
 
   useEffect(() => {
     const abortController = new AbortController();
@@ -27,6 +31,7 @@ export function useFetch<T>(url: string, method: string = "GET") {
       if (error && !abortController.signal.aborted) {
         setError(error);
       }
+
       setIsLoading(false);
     };
 
@@ -35,7 +40,7 @@ export function useFetch<T>(url: string, method: string = "GET") {
     return () => {
       abortController.abort();
     };
-  }, [url, method]);
+  }, [url, method, triggerRefetch]);
 
-  return { data, setData, isLoading, error };
+  return { data, setData, isLoading, error, refetch };
 }

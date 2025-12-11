@@ -12,6 +12,12 @@ export type RAGDocumentListSchema = {
     */
     unique_document_name: string;
     /**
+     * @maxLength 255
+     * @default ""
+     * @type string | undefined
+    */
+    original_document_name?: string;
+    /**
      * @type string
     */
     document_path: string;
