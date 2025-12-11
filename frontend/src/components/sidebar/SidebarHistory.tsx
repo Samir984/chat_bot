@@ -7,7 +7,6 @@ import {
   SidebarMenu,
 } from "@/components/ui/sidebar";
 import type { ConversationListResponseSchema } from "@/gen";
-import { useEffect } from "react";
 import { useFetch } from "@/hooks/useFetch";
 
 export function SidebarHistory() {
@@ -18,6 +17,7 @@ export function SidebarHistory() {
     error,
   } = useFetch<ConversationListResponseSchema[]>("/conversation/list/");
 
+  console.log("isloading", isLoading);
   const recent = recentChats ?? [];
 
   return (

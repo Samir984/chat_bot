@@ -23,63 +23,10 @@ export default function Chat() {
   // `inLoading` is true while the initial conversation (by id) is being fetched
   const [inLoading, setInLoading] = useState(false);
 
-  useEffect(() => {
-    setMessages([]);
-  }, []);
-
   const navigate = useNavigate();
 
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  // Load conversation messages when `id` is present and user is authenticated
-  useEffect(() => {
-    if (!id || !isAuthenticate) return;
-
-    const ac = new AbortController();
-    let mounted = true;
-
-    const load = async () => {
-      try {
-        setInLoading(true);
-        const { data, error } = await fetchApi<SelectedConversationSchema>(
-          `/conversation/${id}/`,
-          "GET",
-          undefined,
-          ac.signal
-        );
-
-        if (!mounted) return;
-
-        if (error) {
-          console.error("Failed to load conversation:", error);
-          toast.error("Could not load conversation");
-          return;
-        }
-
-        if (data && Array.isArray(data.history)) {
-          const mapped: Message[] = data.history.map((m, idx) => ({
-            id: `${Date.now()}-${idx}`,
-            role: m.role as Message["role"],
-            content: m.content,
-          }));
-          setMessages(mapped);
-        }
-      } catch (err: unknown) {
-        if (err instanceof DOMException && err.name === "AbortError") return;
-        console.error("Error loading conversation:", err);
-        toast.error("Could not load conversation");
-      } finally {
-        if (mounted) setInLoading(false);
-      }
-    };
-
-    load();
-
-    return () => {
-      mounted = false;
-      ac.abort();
-    };
-  }, [id, isAuthenticate]);
 
   // for unauthenticated users
   const publicChatHandler = async (prompt: string) => {
