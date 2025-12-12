@@ -1,5 +1,6 @@
 import { fetchApi } from "@/services/api";
 import CollectionCard from "@/components/collections/CollectionCard";
+import { Library, CircleX } from "lucide-react";
 import { CreateCollectionDialog } from "@/components/collections/CreateCollectionDialog";
 import { RenderData } from "@/components/RenderData";
 import { toast } from "sonner";
@@ -39,23 +40,18 @@ export default function Collections() {
     }
   };
 
-  const handleToggleIndex = async (collectionId: string, fileId: string) => {
-    await fetchApi(`/rag_collection/start-indexing/${collectionId}/`, "GET");
-
-    setCollections(
-      (collections ?? []).map((collection) =>
-        (collection.id?.toString() || "") === collectionId
-          ? {
-              ...collection,
-              documents: (collection.documents ?? []).map((doc) =>
-                (doc.id?.toString() || "") === fileId
-                  ? { ...doc, is_indexed: true }
-                  : doc
-              ),
-            }
-          : collection
-      )
+  const handleIndex = async (collectionId: string, fileId: string) => {
+    const { data, error } = await fetchApi(
+      `/rag_collection/start-indexing/${collectionId}/${fileId}/`,
+      "GET"
     );
+    if (data) {
+      refetch();
+    }
+
+    if (error) {
+      toast.error(error);
+    }
   };
 
   const handleIndexAll = (collectionId: string) => {
@@ -80,7 +76,7 @@ export default function Collections() {
 
   const handleDeleteFile = async (collectionId: string, fileId: string) => {
     const { error } = await fetchApi(
-      `/rag_collection/${collectionId}/${fileId}/`,
+      `/rag_collection/${collectionId}/document/${fileId}/`,
       "DELETE"
     );
     if (!error) {
@@ -90,12 +86,16 @@ export default function Collections() {
     }
   };
 
-  const handleDeleteCollection = (collectionId: string) => {
-    setCollections(
-      (collections ?? []).filter(
-        (collection) => (collection.id?.toString() || "") !== collectionId
-      )
+  const handleDeleteCollection = async (collectionId: string) => {
+    const { error } = await fetchApi(
+      `/rag_collection/${collectionId}/`,
+      "DELETE"
     );
+    if (!error) {
+      refetch();
+    } else {
+      toast.error(error);
+    }
   };
 
   const handleRenameCollection = async (
@@ -143,7 +143,7 @@ export default function Collections() {
   };
 
   return (
-    <div className="container mx-auto p-6 space-y-8">
+    <div className="container mx-auto p-6 space-y-8 flex flex-col h-full">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Collections</h1>
@@ -154,50 +154,82 @@ export default function Collections() {
         <CreateCollectionDialog onCreate={handleCreateCollection} />
       </div>
 
-      <div className="grid gap-6 grid-cols-[repeat(auto-fill,minmax(320px,1fr))]">
+      <div className="flex-grow h-full">
         <RenderData
           data={collections}
           isLoading={isLoading}
           error={error}
-          RenderItems={(collections) =>
-            collections.map((collection) => (
-              <CollectionCard
-                key={collection.id}
-                name={collection.rag_collection_name}
-                files={
-                  collection.documents?.map((d) => ({
-                    id: d.id?.toString() || "",
-                    name: d.original_document_name || d.unique_document_name,
-                    isIndexed: d.is_indexed || false,
-                  })) || []
-                }
-                onToggleIndex={(fileId) =>
-                  handleToggleIndex(collection.id?.toString() || "", fileId)
-                }
-                onIndexAll={() =>
-                  handleIndexAll(collection.id?.toString() || "")
-                }
-                onDeleteFile={(fileId) =>
-                  handleDeleteFile(collection.id?.toString() || "", fileId)
-                }
-                onDelete={() =>
-                  handleDeleteCollection(collection.id?.toString() || "")
-                }
-                onRename={(newName) =>
-                  handleRenameCollection(
-                    collection.id?.toString() || "",
-                    newName
-                  )
-                }
-                onAddFiles={(files) =>
-                  handleAddFilesToCollection(
-                    collection.id?.toString() || "",
-                    files
-                  )
-                }
-              />
-            ))
-          }
+          RenderLoading={() => (
+            <div className="h-[80%] flex items-center justify-center">
+              <div className="loader"></div>
+            </div>
+          )}
+          RenderEmpty={() => (
+            <div className="h-[60%] flex flex-col items-center justify-center p-8 text-center shadow-sm">
+              <div className="mb-4 text-gray-500 dark:text-gray-400">
+                <Library className="w-12 h-12 text-current" />
+              </div>
+
+              <div className="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-2">
+                No Collections Found
+              </div>
+
+              <div className="text-sm text-gray-500 dark:text-gray-400 max-w-xl">
+                It looks like you haven't created any collections yet.
+              </div>
+            </div>
+          )}
+          RenderError={() => (
+            <div className="h-[60%] flex flex-col items-center justify-center p-8 text-center shadow-sm">
+              <div className="mb-2 text-gray-500 dark:text-gray-400">
+                <CircleX className="w-12 h-12 text-red-900" />
+              </div>
+              <div className="text-xl font-semibold text-red-900 ">
+                OOps! Something went wrong
+              </div>
+            </div>
+          )}
+          RenderContent={(collections) => (
+            <div className="grid gap-6 grid-cols-[repeat(auto-fill,minmax(320px,1fr))]">
+              {collections.map((collection) => (
+                <CollectionCard
+                  key={collection.id}
+                  name={collection.rag_collection_name}
+                  files={
+                    collection.documents?.map((d) => ({
+                      id: d.id?.toString() || "",
+                      name: d.original_document_name || d.unique_document_name,
+                      isIndexed: d.is_indexed || false,
+                    })) || []
+                  }
+                  onIndexFile={(fileId) =>
+                    handleIndex(collection.id?.toString() || "", fileId)
+                  }
+                  onIndexAll={() =>
+                    handleIndexAll(collection.id?.toString() || "")
+                  }
+                  onDeleteFile={(fileId) =>
+                    handleDeleteFile(collection.id?.toString() || "", fileId)
+                  }
+                  onDelete={() =>
+                    handleDeleteCollection(collection.id?.toString() || "")
+                  }
+                  onRename={(newName) =>
+                    handleRenameCollection(
+                      collection.id?.toString() || "",
+                      newName
+                    )
+                  }
+                  onAddFiles={(files) =>
+                    handleAddFilesToCollection(
+                      collection.id?.toString() || "",
+                      files
+                    )
+                  }
+                />
+              ))}
+            </div>
+          )}
         />
       </div>
     </div>

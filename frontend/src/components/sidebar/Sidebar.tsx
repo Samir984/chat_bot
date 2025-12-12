@@ -14,7 +14,7 @@ export default function Sidebar() {
     <CustomeSidebar className="bg-sidebar border-r border-sidebar-border text-sidebar-foreground">
       <SidebarHeader className="px-3 py-4">
         <div className="flex items-center justify-between mb-4 px-1">
-          <SidebarTrigger className="text-muted-foreground hover:text-foreground transition-colors" />
+          <SidebarTrigger className="" />
         </div>
 
         <SidebarNavigation />

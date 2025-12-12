@@ -1,8 +1,10 @@
 import { Folder, SquarePen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
+import { useAuth } from "@/context/AuthProvider";
 
 export function SidebarNavigation() {
+  const { isAuthenticate } = useAuth();
   const location = useLocation();
   const isCollections = location.pathname === "/collections";
 
@@ -27,15 +29,17 @@ export function SidebarNavigation() {
         }`}
         variant="ghost"
       >
-        <Link to="/collections">
-          <Folder
-            size={16}
-            className={`${
-              isCollections ? "text-primary" : "text-foreground/70"
-            } transition-colors`}
-          />
-          <span className="text-sm">Collections</span>
-        </Link>
+        {isAuthenticate && (
+          <Link to="/collections">
+            <Folder
+              size={16}
+              className={`${
+                isCollections ? "text-primary" : "text-foreground/70"
+              } transition-colors`}
+            />
+            <span className="text-sm">Collections</span>
+          </Link>
+        )}
       </Button>
     </div>
   );

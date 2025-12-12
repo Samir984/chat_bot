@@ -1,7 +1,13 @@
 from chat_bot.env import ENV
 from langchain_qdrant import QdrantVectorStore
 from qdrant_client import QdrantClient
-from qdrant_client.http.models import Distance, VectorParams
+from qdrant_client.http.models import (
+    Distance,
+    VectorParams,
+    Filter,
+    FieldCondition,
+    MatchValue,
+)
 from chat.embedding_mode import embeddings_model as embeddings
 
 
@@ -37,3 +43,25 @@ def get_or_create_vector_store(qdrant_collection_name: str):
             collection_name=qdrant_collection_name,
             embedding=embeddings,
         )
+
+
+def delete_vector_collection(qdrant_collection_name: str):
+    if qdrant_client.collection_exists(collection_name=qdrant_collection_name):
+        qdrant_client.delete_collection(collection_name=qdrant_collection_name)
+
+
+def delete_document_vectors(qdrant_collection_name: str, document_id: int):
+    if not qdrant_client.collection_exists(collection_name=qdrant_collection_name):
+        return
+
+    qdrant_client.delete(
+        collection_name=qdrant_collection_name,
+        points_selector=Filter(
+            must=[
+                FieldCondition(
+                    key="document_id",
+                    match=MatchValue(value=document_id),
+                )
+            ]
+        ),
+    )

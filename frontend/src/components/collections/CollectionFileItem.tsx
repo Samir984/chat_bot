@@ -15,13 +15,13 @@ interface CollectionFile {
 
 interface CollectionFileItemProps {
   file: CollectionFile;
-  onToggleIndex: (fileId: string) => void;
+  onIndexFile: (fileId: string) => void;
   onDelete: (fileId: string) => void;
 }
 
 export function CollectionFileItem({
   file,
-  onToggleIndex,
+  onIndexFile,
   onDelete,
 }: CollectionFileItemProps) {
   return (
@@ -61,7 +61,7 @@ export function CollectionFileItem({
                     variant="outline"
                     size="sm"
                     className="h-7 px-2 text-[10px] gap-1.5 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors"
-                    onClick={() => onToggleIndex(file.id)}
+                    onClick={() => onIndexFile(file.id)}
                   >
                     <Sparkles className="h-3.5 w-3.5" />
                     Index

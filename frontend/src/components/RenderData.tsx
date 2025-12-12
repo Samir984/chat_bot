@@ -5,34 +5,51 @@ interface RenderDataProps<T> {
   data: T[] | null;
   isLoading: boolean;
   error: string | null;
-  RenderItems: (data: T[]) => React.ReactNode;
+  RenderContent: (data: T[]) => React.ReactNode;
+  RenderLoading?: () => React.ReactNode;
+  RenderEmpty?: () => React.ReactNode;
+  RenderError?: () => React.ReactNode;
 }
 
 export function RenderData<T>({
   data,
   isLoading,
   error,
-  RenderItems,
+  RenderContent,
+  RenderLoading,
+  RenderEmpty,
+  RenderError,
 }: RenderDataProps<T>) {
-  if (isLoading) {
+  if (hasData(data)) {
+    return <>{RenderContent(data as T[])}</>;
+  }
+  if (isLoading && !hasData(data)) {
     return (
-      <div className="px-2 py-2 text-sm text-muted-foreground">Loading…</div>
+      RenderLoading?.() || (
+        <div className="h-full flex items-center justify-center text-sm text-muted-foreground">
+          Loading…
+        </div>
+      )
     );
   }
 
   if (error) {
     return (
-      <div className="px-2 py-2 text-sm text-rose-500">Unable to load data</div>
+      RenderError?.() || (
+        <div className="h-full flex items-center justify-center text-sm text-rose-500">
+          Unable to load data
+        </div>
+      )
     );
   }
 
   if (!hasData(data) && !isLoading) {
     return (
-      <div className="px-2 py-2 text-sm text-muted-foreground">
-        No items found
-      </div>
+      RenderEmpty?.() || (
+        <div className="h-full px-2 py-2 text-sm text-muted-foreground">
+          No items found
+        </div>
+      )
     );
   }
-
-  return <>{RenderItems(data as T[])}</>;
 }

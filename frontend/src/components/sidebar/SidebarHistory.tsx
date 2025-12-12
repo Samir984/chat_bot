@@ -33,7 +33,7 @@ export function SidebarHistory() {
               data={recent}
               isLoading={isLoading}
               error={error}
-              RenderItems={(data) =>
+              RenderContent={(data) =>
                 data.map((chat) => (
                   <SidebarHistoryItem key={chat.conversation_id} chat={chat} />
                 ))

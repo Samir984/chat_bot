@@ -27,7 +27,11 @@ from chat.utils import (
     validate_documents,
     build_rag_system_message,
 )
-from chat.qdrant_client import get_vector_store
+from chat.qdrant_client import (
+    get_vector_store,
+    delete_vector_collection,
+    delete_document_vectors,
+)
 from langchain_core.messages import SystemMessage
 
 cookie_auth = CookieJWTAuth()
@@ -259,6 +263,61 @@ def update_rag_collection(
     return 200, GenericSchema(detail="RAG collection updated successfully")
 
 
+@rag_collection.delete(
+    "/{rag_collection_id}/",
+    response={200: GenericSchema},
+    auth=cookie_auth,
+)
+def delete_rag_collection(request: HttpRequest, rag_collection_id: int):
+    rag_collection = get_object_or_404(
+        RAGCollection, id=rag_collection_id, user=request.auth
+    )
+
+    qdrant_collection_name = rag_collection.qdrant_collection_name
+    documents = list(rag_collection.documents.all())
+
+
+    for document in documents:
+        if document.document_path:
+            document.document_path.delete(save=False)
+        document.delete()
+
+   
+    if qdrant_collection_name:
+        delete_vector_collection(qdrant_collection_name)
+
+    rag_collection.delete()
+
+    return 200, GenericSchema(detail="RAG collection and documents deleted successfully")
+
+
+@rag_collection.delete(
+    "/{rag_collection_id}/document/{document_id}/",
+    response={200: GenericSchema},
+    auth=cookie_auth,
+)
+def delete_rag_collection_document(request: HttpRequest, rag_collection_id: int, document_id: int):
+    try:
+        rag_collection = get_object_or_404(
+            RAGCollection, id=rag_collection_id, user=request.auth
+        )
+        document = get_object_or_404(
+            RAGDocument, id=document_id, rag_collection=rag_collection
+        )
+
+        qdrant_collection_name = rag_collection.qdrant_collection_name
+        if qdrant_collection_name:
+            delete_document_vectors(qdrant_collection_name, document.id)
+
+        if document.document_path:
+            document.document_path.delete(save=False)
+
+        document.delete()
+        return 200, GenericSchema(detail="RAG collection document deleted successfully")
+    except Exception as e:
+        return 400, GenericSchema(detail=f"Error deleting RAG collection document: {str(e)}")
+
+
 @rag_collection.get(
     "/start-indexing/{rag_collection_id}/",
     response={200: GenericSchema, 202: StartIndexingResponseSchema},
@@ -283,6 +342,8 @@ def start_indexing(request: HttpRequest, rag_collection_id: int):
     return 202, StartIndexingResponseSchema(task_id=async_result.id)
 
 
+
+
 @rag_collection.get(
     "/indexing-status/{task_id}/",
     response={200: IndexingStatusResponseSchema, 200: GenericSchema},
@@ -297,3 +358,4 @@ def get_indexing_status(request: HttpRequest, task_id: str):
         progress=async_result.meta.get("progress"),
         message=async_result.meta.get("message"),
     )
+

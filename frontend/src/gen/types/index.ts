@@ -1,5 +1,7 @@
 export type { ChatApiCreateRagCollection200, ChatApiCreateRagCollection400, ChatApiCreateRagCollectionMutationRequest, ChatApiCreateRagCollectionMutationResponse, ChatApiCreateRagCollectionMutation } from "./ChatApiCreateRagCollection.ts";
 export type { ChatApiDeleteConversationPathParams, ChatApiDeleteConversation200, ChatApiDeleteConversationMutationResponse, ChatApiDeleteConversationMutation } from "./ChatApiDeleteConversation.ts";
+export type { ChatApiDeleteRagCollectionPathParams, ChatApiDeleteRagCollection200, ChatApiDeleteRagCollectionMutationResponse, ChatApiDeleteRagCollectionMutation } from "./ChatApiDeleteRagCollection.ts";
+export type { ChatApiDeleteRagCollectionDocumentPathParams, ChatApiDeleteRagCollectionDocument200, ChatApiDeleteRagCollectionDocumentMutationResponse, ChatApiDeleteRagCollectionDocumentMutation } from "./ChatApiDeleteRagCollectionDocument.ts";
 export type { ChatApiGetConversationPathParams, ChatApiGetConversation200, ChatApiGetConversationQueryResponse, ChatApiGetConversationQuery } from "./ChatApiGetConversation.ts";
 export type { ChatApiGetIndexingStatusPathParams, ChatApiGetIndexingStatus200, ChatApiGetIndexingStatusQueryResponse, ChatApiGetIndexingStatusQuery } from "./ChatApiGetIndexingStatus.ts";
 export type { ChatApiGetUserConversationsList200, ChatApiGetUserConversationsListQueryResponse, ChatApiGetUserConversationsListQuery } from "./ChatApiGetUserConversationsList.ts";

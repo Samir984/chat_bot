@@ -54,7 +54,7 @@ export default function ChatInput({
 
   return (
     <div className="w-full flex flex-col max-w-4xl mx-auto px-4 pb-4 bg-background">
-      <div className="relative rounded-3xl border bg-card/50 backdrop-blur-sm p-4 ">
+      <div className="relative rounded-3xl border border-blue-900 backdrop-blur-sm p-4  ">
         <textarea
           ref={textareaRef}
           value={input}

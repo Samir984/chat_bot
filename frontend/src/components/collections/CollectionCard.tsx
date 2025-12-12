@@ -16,7 +16,7 @@ interface CollectionFile {
 interface CollectionCardProps {
   name: string;
   files: CollectionFile[];
-  onToggleIndex: (fileId: string) => void;
+  onIndexFile: (fileId: string) => void;
   onIndexAll: () => void;
   onDeleteFile: (fileId: string) => void;
   onRename: (newName: string) => void;
@@ -27,7 +27,7 @@ interface CollectionCardProps {
 export default function CollectionCard({
   name,
   files,
-  onToggleIndex,
+  onIndexFile,
   onDeleteFile,
   onRename,
   onDelete,
@@ -76,7 +76,7 @@ export default function CollectionCard({
                 <CollectionFileItem
                   key={file.id}
                   file={file}
-                  onToggleIndex={onToggleIndex}
+                  onIndexFile={onIndexFile}
                   onDelete={setFileToDelete}
                 />
               ))}
