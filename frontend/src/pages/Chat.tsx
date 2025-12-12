@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import {
   roleChoicesEnum,
   type ChatResponseSchema,
+  type RAGCollectionListSchema,
   type SelectedConversationSchema,
 } from "@/gen/types";
 import type { Message } from "@/types/chat";
@@ -20,13 +21,10 @@ export default function Chat() {
   const { isAuthenticate } = useAuth();
   const [isChatting, setIsChatting] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
-  // `inLoading` is true while the initial conversation (by id) is being fetched
-  const [inLoading, setInLoading] = useState(false);
 
   const navigate = useNavigate();
 
   const abortControllerRef = useRef<AbortController | null>(null);
-
 
   // for unauthenticated users
   const publicChatHandler = async (prompt: string) => {
@@ -95,7 +93,10 @@ export default function Chat() {
   };
 
   // for authenticated users
-  const chatHandler = async (prompt: string) => {
+  const chatHandler = async (
+    prompt: string,
+    collection: RAGCollectionListSchema | null
+  ) => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
@@ -116,7 +117,11 @@ export default function Chat() {
     const { data, error } = await fetchApi<ChatResponseSchema>(
       "/chat/",
       "POST",
-      { conversation_id: id, prompt },
+      {
+        conversation_id: id,
+        prompt,
+        collection_name: collection?.rag_collection_name,
+      },
       abortController.signal
     );
 
@@ -161,12 +166,15 @@ export default function Chat() {
     }
   };
 
-  const handlePromptSubmit = async (prompt: string) => {
+  const handlePromptSubmit = async (
+    prompt: string,
+    collection: RAGCollectionListSchema | null
+  ) => {
     if (prompt.trim().length === 0) {
       return;
     }
     if (isAuthenticate) {
-      await chatHandler(prompt);
+      await chatHandler(prompt, collection);
     } else {
       await publicChatHandler(prompt);
     }
@@ -182,51 +190,14 @@ export default function Chat() {
   return (
     <div className="flex flex-col h-full max-w-4xl mx-auto w-full">
       <div className="flex flex-col flex-grow max-h-[calc(100vh-200px)] h-full overflow-y-auto">
-        {inLoading ? (
-          <div
-            className="flex h-full items-center justify-center"
-            role="status"
-            aria-live="polite"
-            aria-busy={true}
-          >
-            <div className="flex flex-col items-center gap-3">
-              <svg
-                className="h-10 w-10 animate-spin text-primary"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                ></circle>
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-                ></path>
-              </svg>
-              <div className="text-sm text-muted-foreground">
-                Loading conversation…
-              </div>
-            </div>
-          </div>
-        ) : (
-          <MessageList
-            messages={messages}
-            isLoading={isChatting || inLoading}
-          />
-        )}
+        <MessageList messages={messages} isLoading={isChatting} />
       </div>
 
       <div className="p-4 sticky bottom-0 left-0 right-0">
         <ChatInput
-          onSubmit={handlePromptSubmit}
+          onSubmit={(prompt, collection) =>
+            handlePromptSubmit(prompt, collection)
+          }
           isProcessingPreviousPrompt={isChatting}
           abortCurrentRequest={abortCurrentRequest}
         />

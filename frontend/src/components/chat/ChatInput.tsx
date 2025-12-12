@@ -2,9 +2,13 @@ import { useState, useRef, useEffect } from "react";
 import { Send, Mic } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import CollectionSelector from "@/components/collections/CollectionSelector";
+import type { RAGCollectionListSchema } from "@/gen/types/RAGCollectionListSchema";
 
 interface ChatInputProps {
-  onSubmit: (prompt: string) => void;
+  onSubmit: (
+    prompt: string,
+    collection: RAGCollectionListSchema | null
+  ) => void;
   isProcessingPreviousPrompt: boolean;
   abortCurrentRequest: () => void;
 }
@@ -15,9 +19,8 @@ export default function ChatInput({
   abortCurrentRequest,
 }: ChatInputProps) {
   const [input, setInput] = useState("");
-  const [selectedCollection, setSelectedCollection] = useState<string | null>(
-    null
-  );
+  const [selectedCollection, setSelectedCollection] =
+    useState<RAGCollectionListSchema | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const adjustHeight = () => {
@@ -31,7 +34,7 @@ export default function ChatInput({
   const handleSumit = () => {
     if (!input.trim()) return;
     if (isProcessingPreviousPrompt === false) {
-      onSubmit(input);
+      onSubmit(input, selectedCollection);
       setInput("");
       return;
     }

@@ -1,50 +1,24 @@
 import { useEffect, useState, useRef } from "react";
-import { Plus, Database, Folder, Search, User, Book } from "lucide-react";
+import { Plus, Folder, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { useFetch } from "@/hooks/useFetch";
+import type { RAGCollectionListSchema } from "@/gen/types/RAGCollectionListSchema";
 
 interface CollectionSelectorProps {
-  selectedCollection: string | null;
-  onCollectionSelect: (collectionId: string) => void;
+  selectedCollection: RAGCollectionListSchema | null;
+  onCollectionSelect: (collection: RAGCollectionListSchema) => void;
   disabled?: boolean;
 }
-
-const COLLECTIONS = [
-  {
-    id: "project-docs",
-    name: "Project Docs",
-    icon: Folder,
-    color: "text-blue-400",
-    bgColor: "bg-blue-400/10",
-  },
-  {
-    id: "research",
-    name: "Research Papers",
-    icon: Database,
-    color: "text-purple-400",
-    bgColor: "bg-purple-400/10",
-  },
-  {
-    id: "personal",
-    name: "Personal",
-    icon: User,
-    color: "text-green-400",
-    bgColor: "bg-green-400/10",
-  },
-  {
-    id: "notes",
-    name: "Notes",
-    icon: Book,
-    color: "text-orange-400",
-    bgColor: "bg-orange-400/10",
-  },
-];
 
 export default function CollectionSelector({
   selectedCollection,
   onCollectionSelect,
   disabled,
 }: CollectionSelectorProps) {
+  const { data: collections, isLoading: isCollectionsLoading } = useFetch<
+    RAGCollectionListSchema[]
+  >("/rag_collection/list/", "GET");
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
@@ -71,17 +45,20 @@ export default function CollectionSelector({
   }, [isOpen]);
 
   const handleCollectionSelect = (collectionId: string) => {
-    onCollectionSelect(collectionId);
+    const collection = collections?.find(
+      (c) => (c.id?.toString() || "") === collectionId
+    );
+    if (collection) {
+      onCollectionSelect(collection);
+    }
     setSearchQuery("");
     setIsOpen(false);
   };
 
-  const filteredCollections = COLLECTIONS.filter((collection) =>
-    collection.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const selectedCollectionData = COLLECTIONS.find(
-    (c) => c.id === selectedCollection
+  const filteredCollections = collections?.filter((collection) =>
+    collection.rag_collection_name
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase())
   );
 
   return (
@@ -122,19 +99,19 @@ export default function CollectionSelector({
             </div>
 
             <div className="max-h-64 overflow-y-auto py-1">
-              {filteredCollections.length > 0 ? (
+              {filteredCollections && filteredCollections.length > 0 ? (
                 filteredCollections.map((collection) => (
                   <button
-                    key={collection.id}
-                    onClick={() => handleCollectionSelect(collection.id)}
+                    key={collection.id?.toString() || ""}
+                    onClick={() =>
+                      handleCollectionSelect(collection.id?.toString() || "")
+                    }
                     className="w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded-sm hover:bg-accent hover:text-accent-foreground transition-colors text-left"
                   >
-                    <div
-                      className={`p-1.5 rounded-full ${collection.bgColor} ${collection.color}`}
-                    >
-                      <collection.icon size={16} />
-                    </div>
-                    <span className="font-medium">{collection.name}</span>
+                    <Folder className="h-4 w-4 text-muted-foreground" />
+                    <span className="font-medium">
+                      {collection.rag_collection_name}
+                    </span>
                   </button>
                 ))
               ) : (
@@ -147,15 +124,13 @@ export default function CollectionSelector({
         </div>
       )}
 
-      {selectedCollection && selectedCollectionData && (
+      {selectedCollection && (
         <div className="flex items-center gap-2 px-3 py-1.5 bg-muted/50 rounded-full border animate-in fade-in slide-in-from-left-2">
-          <div
-            className={`p-1 rounded-full ${selectedCollectionData.bgColor} ${selectedCollectionData.color}`}
-          >
-            <selectedCollectionData.icon size={12} />
+          <div className="p-1 rounded-full bg-primary/10 text-primary">
+            <Folder size={12} />
           </div>
           <span className="text-xs font-medium">
-            {selectedCollectionData.name}
+            {selectedCollection.rag_collection_name}
           </span>
         </div>
       )}
