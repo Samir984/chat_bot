@@ -24,6 +24,32 @@ export default function Chat() {
 
   const navigate = useNavigate();
 
+  useEffect(() => {
+    const fetchConversation = async () => {
+      const { data, error } = await fetchApi<SelectedConversationSchema>(
+        `/conversation/${id}/`,
+        "GET"
+      );
+      if (data) {
+        setMessages(
+          data.history.map((message) => ({
+            id: uuidv4(),
+            role: message.role,
+            content: message.content,
+          }))
+        );
+      }
+      if (error) {
+        toast.error(error);
+      }
+    };
+    if (id) {
+      fetchConversation();
+    } else {
+      setMessages([]);
+    }
+  }, [id]);
+
   const abortControllerRef = useRef<AbortController | null>(null);
 
   // for unauthenticated users
@@ -67,12 +93,12 @@ export default function Chat() {
     }
 
     if (data) {
-      const assistantMsg: Message = {
+      const aiMsg: Message = {
         id: Date.now().toString(),
         role: "ai",
         content: data.content,
       };
-      setMessages((prev) => [...prev, assistantMsg]);
+      setMessages((prev) => [...prev, aiMsg]);
     }
 
     if (error && !abortController.signal.aborted) {
@@ -140,12 +166,12 @@ export default function Chat() {
     }
 
     if (data) {
-      const assistantMsg: Message = {
+      const aiMsg: Message = {
         id: Date.now().toString(),
         role: "ai",
         content: data.content,
       };
-      setMessages((prev) => [...prev, assistantMsg]);
+      setMessages((prev) => [...prev, aiMsg]);
       navigate(`/conversation/${data.conversation_id}`);
     }
 

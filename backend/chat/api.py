@@ -22,6 +22,7 @@ from chat.schema import (
     StartIndexingResponseSchema,
     IndexingStatusResponseSchema,
 )
+from chat.choices import RoleChoices
 from chat.utils import (
     build_messages_from_history,
     validate_documents,
@@ -103,8 +104,8 @@ def send_message(request: HttpRequest, data: ChatRequestSchema):
         if message.content:
             updated_history = [
                 *existing_history,
-                {"role": "user", "content": data.prompt},
-                {"role": "assistant", "content": message.content},
+                {"role": RoleChoices.USER, "content": data.prompt},
+                {"role": RoleChoices.AI, "content": message.content},
             ]
 
             if not data.conversation_id:
@@ -148,6 +149,7 @@ def get_user_conversations_list(request: HttpRequest):
     "/{conversation_id}/", response={200: SelectedConversationSchema}, auth=cookie_auth
 )
 def get_conversation(request: HttpRequest, conversation_id: UUID):
+    print(f"Getting conversation {conversation_id}")
     conversation = get_object_or_404(
         Conversation, id=conversation_id, user=request.auth
     )

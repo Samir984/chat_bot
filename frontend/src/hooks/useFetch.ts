@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { fetchApi } from "@/services/api";
 
 export function useFetch<T>(url: string, method: string = "GET") {
@@ -6,9 +6,9 @@ export function useFetch<T>(url: string, method: string = "GET") {
   const [data, setData] = useState<T | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [triggerRefetch, setTriggerRefetch] = useState(0);
-  const refetch = () => {
+  const refetch = useCallback(() => {
     setTriggerRefetch((prev) => prev + 1);
-  };
+  }, []);
 
   useEffect(() => {
     const abortController = new AbortController();

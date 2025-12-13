@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import SidebarHistoryItem from "./SidebarHistoryItem";
 
 import {
@@ -11,8 +11,10 @@ import {
 import { RenderData } from "@/components/RenderData";
 import type { ConversationListResponseSchema } from "@/gen";
 import { useFetch } from "@/hooks/useFetch";
+import { useParams } from "react-router-dom";
 
 export function SidebarHistory() {
+  const { id } = useParams();
   const {
     data: recentChats,
     setData: setRecentChats,
@@ -20,6 +22,12 @@ export function SidebarHistory() {
     error,
     refetch,
   } = useFetch<ConversationListResponseSchema[]>("/conversation/list/");
+
+  useEffect(() => {
+    if (id) {
+      refetch();
+    }
+  }, [id, refetch]);
 
   const recent = recentChats ?? [];
 
@@ -42,7 +50,6 @@ export function SidebarHistory() {
                       key={chat.conversation_id}
                       chat={chat}
                       refetch={refetch}
-                   
                     />
                   ))
                 }
