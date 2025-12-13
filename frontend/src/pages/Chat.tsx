@@ -20,16 +20,27 @@ export default function Chat() {
   const { id } = useParams();
   const { isAuthenticate } = useAuth();
   const [isChatting, setIsChatting] = useState(false);
+  const [isLoadingChat, setIsLoadingChat] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
-
+  const conversationAbortControllerRef = useRef<AbortController | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchConversation = async () => {
+      setIsLoadingChat(true);
+
+      const abortController = new AbortController();
+      conversationAbortControllerRef.current = abortController;
+
       const { data, error } = await fetchApi<SelectedConversationSchema>(
         `/conversation/${id}/`,
-        "GET"
+        "GET",
+        undefined,
+        abortController.signal
       );
+      if (abortController.signal.aborted) {
+        return;
+      }
       if (data) {
         setMessages(
           data.history.map((message) => ({
@@ -42,12 +53,19 @@ export default function Chat() {
       if (error) {
         toast.error(error);
       }
+      setIsLoadingChat(false);
     };
     if (id) {
       fetchConversation();
     } else {
       setMessages([]);
     }
+    return () => {
+      if (conversationAbortControllerRef.current) {
+        conversationAbortControllerRef.current.abort();
+        conversationAbortControllerRef.current = null;
+      }
+    };
   }, [id]);
 
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -216,7 +234,11 @@ export default function Chat() {
   return (
     <div className="flex flex-col h-full max-w-4xl mx-auto w-full">
       <div className="flex flex-col flex-grow max-h-[calc(100vh-200px)] h-full overflow-y-auto">
-        <MessageList messages={messages} isLoading={isChatting} />
+        <MessageList
+          messages={messages}
+          isLoading={isChatting}
+          isLoadingChat={isLoadingChat}
+        />
       </div>
 
       <div className="p-4 sticky bottom-0 left-0 right-0">

@@ -6,9 +6,14 @@ import type { Message } from "@/types/chat";
 interface MessageListProps {
   messages: Message[];
   isLoading: boolean;
+  isLoadingChat: boolean;
 }
 
-export default function MessageList({ messages, isLoading }: MessageListProps) {
+export default function MessageList({
+  messages,
+  isLoading,
+  isLoadingChat,
+}: MessageListProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -17,15 +22,21 @@ export default function MessageList({ messages, isLoading }: MessageListProps) {
 
   return (
     <div className="flex-1 overflow-y-auto p-4 space-y-4">
-      {messages.map((msg) => (
-        <MessageItem
-          key={msg.id}
-          role={msg.role}
-          content={msg.content}
-          type={msg.type}
-        />
-      ))}
-      {isLoading && <TypingIndicator />}
+      {isLoadingChat && (
+        <div className="h-[60%] flex items-center justify-center">
+          <div className="loader"></div>
+        </div>
+      )}
+      {!isLoadingChat &&
+        messages.map((msg) => (
+          <MessageItem
+            key={msg.id}
+            role={msg.role}
+            content={msg.content}
+            type={msg.type}
+          />
+        ))}
+      {!isLoadingChat && isLoading && <TypingIndicator />}
       <div ref={bottomRef} />
     </div>
   );
