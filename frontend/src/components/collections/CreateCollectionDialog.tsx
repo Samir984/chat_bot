@@ -12,7 +12,7 @@ export function CreateCollectionDialog() {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const {
-    files,
+    fileItems,
     fileInputRef,
     handleFileChange,
     removeFile,
@@ -21,6 +21,8 @@ export function CreateCollectionDialog() {
     clearFiles,
     openFileDialog,
   } = useFileUpload();
+
+  const files = fileItems.map((item) => item.file);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -92,20 +94,20 @@ export function CreateCollectionDialog() {
                 </div>
               </div>
 
-              {files.length > 0 && (
+              {fileItems.length > 0 && (
                 <div className="space-y-2 max-h-40 overflow-y-auto pr-2">
-                  {files.map((file, index) => (
+                  {fileItems.map((fileItem) => (
                     <div
-                      key={index}
+                      key={fileItem.id}
                       className="flex items-center gap-2 p-2 rounded-md border bg-muted/40 group relative"
                     >
                       <FileText className="h-4 w-4 text-primary shrink-0" />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium truncate">
-                          {file.name}
+                          {fileItem.file.name}
                         </p>
                         <p className="text-[10px] text-muted-foreground">
-                          {(file.size / 1024).toFixed(1)} KB
+                          {(fileItem.file.size / 1024).toFixed(1)} KB
                         </p>
                       </div>
                       <Button
@@ -114,7 +116,7 @@ export function CreateCollectionDialog() {
                         className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
                         onClick={(e) => {
                           e.stopPropagation();
-                          removeFile(index);
+                          removeFile(fileItem.id);
                         }}
                       >
                         <X className="h-3 w-3" />

@@ -16,7 +16,7 @@ export function AddDocumentDialog({
   onAdd,
 }: AddDocumentDialogProps) {
   const {
-    files,
+    fileItems,
     fileInputRef,
     handleFileChange,
     removeFile,
@@ -25,6 +25,8 @@ export function AddDocumentDialog({
     clearFiles,
     openFileDialog,
   } = useFileUpload();
+
+  const files = fileItems.map((item) => item.file);
 
   const handleSubmit = () => {
     if (files.length > 0) {
@@ -42,7 +44,7 @@ export function AddDocumentDialog({
       description="Upload PDF, TXT, or MD files to this collection."
       onSubmit={handleSubmit}
       submitLabel={`Add ${
-        files.length > 0 ? `${files.length} Files` : "Documents"
+        fileItems.length > 0 ? `${fileItems.length} Files` : "Documents"
       }`}
       submitDisabled={files.length === 0}
     >
@@ -70,16 +72,16 @@ export function AddDocumentDialog({
           />
         </div>
 
-        {files.length > 0 && (
+        {fileItems.length > 0 && (
           <div className="space-y-2 max-h-[150px] overflow-y-auto">
-            {files.map((file, index) => (
+            {fileItems.map((fileItem) => (
               <div
-                key={index}
+                key={fileItem.id}
                 className="flex items-center justify-between p-2 rounded-md border bg-muted/50"
               >
                 <div className="flex items-center gap-2 overflow-hidden">
                   <FileText className="h-4 w-4 shrink-0 text-blue-500" />
-                  <span className="text-sm truncate">{file.name}</span>
+                  <span className="text-sm truncate">{fileItem.file.name}</span>
                 </div>
                 <Button
                   variant="ghost"
@@ -88,7 +90,7 @@ export function AddDocumentDialog({
                   className="h-6 w-6"
                   onClick={(e) => {
                     e.stopPropagation();
-                    removeFile(index);
+                    removeFile(fileItem.id);
                   }}
                 >
                   <X className="h-4 w-4" />
