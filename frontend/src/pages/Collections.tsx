@@ -1,146 +1,22 @@
-import { fetchApi } from "@/services/api";
-import CollectionCard from "@/components/collections/CollectionCard";
-import { Library, CircleX } from "lucide-react";
 import { CreateCollectionDialog } from "@/components/collections/CreateCollectionDialog";
+import CollectionCard from "@/components/collections/CollectionCard";
 import { RenderData } from "@/components/RenderData";
-import { toast } from "sonner";
-import { useFetch } from "@/hooks/useFetch";
-import type { RAGCollectionListSchema } from "@/gen/types/RAGCollectionListSchema";
+import { Library, CircleX } from "lucide-react";
+import { useCollections } from "@/contexts/CollectionsContext";
 
 export default function Collections() {
   const {
-    data: collections,
-    setData: setCollections,
+    collections,
     isLoading,
     error,
-    refetch,
-  } = useFetch<RAGCollectionListSchema[]>("/rag_collection/list/", "GET");
-
-  const handleCreateCollection = async (
-    name: string,
-    uploadedFiles: File[]
-  ) => {
-    const formData = new FormData();
-    formData.append("rag_collection_name", name);
-    uploadedFiles.forEach((file) => formData.append("files", file));
-
-    const { data, error } = await fetchApi<RAGCollectionListSchema>(
-      "/rag_collection/",
-      "POST",
-      formData,
-      undefined,
-      "form-data"
-    );
-    if (data) {
-      refetch();
-    }
-
-    if (error) {
-      toast.error(error);
-    }
-  };
-
-  const handleIndex = async (collectionId: string, fileId: string) => {
-    const { data, error } = await fetchApi(
-      `/rag_collection/start-indexing/${collectionId}/${fileId}/`,
-      "GET"
-    );
-    if (data) {
-      refetch();
-    }
-
-    if (error) {
-      toast.error(error);
-    }
-  };
-
-  const handleIndexAll = (collectionId: string) => {
-    setCollections(
-      (collections ?? []).map((collection) => {
-        if ((collection.id?.toString() || "") === collectionId) {
-          const allIndexed = (collection.documents ?? []).every(
-            (doc) => doc.is_indexed
-          );
-          return {
-            ...collection,
-            documents: (collection.documents ?? []).map((doc) => ({
-              ...doc,
-              is_indexed: !allIndexed,
-            })),
-          };
-        }
-        return collection;
-      })
-    );
-  };
-
-  const handleDeleteFile = async (collectionId: string, fileId: string) => {
-    const { error } = await fetchApi(
-      `/rag_collection/${collectionId}/document/${fileId}/`,
-      "DELETE"
-    );
-    if (!error) {
-      refetch();
-    } else {
-      toast.error(error);
-    }
-  };
-
-  const handleDeleteCollection = async (collectionId: string) => {
-    const { error } = await fetchApi(
-      `/rag_collection/${collectionId}/`,
-      "DELETE"
-    );
-    if (!error) {
-      refetch();
-    } else {
-      toast.error(error);
-    }
-  };
-
-  const handleRenameCollection = async (
-    collectionId: string,
-    newName: string
-  ) => {
-    const formData = new FormData();
-    formData.append("rag_collection_name", newName);
-    const { error } = await fetchApi(
-      `/rag_collection/${collectionId}/`,
-      "PATCH",
-      formData,
-      undefined,
-      "form-data"
-    );
-    if (!error) {
-      refetch();
-    } else {
-      toast.error(error);
-    }
-  };
-
-  const handleAddFilesToCollection = async (
-    collectionId: string,
-    files: File[]
-  ) => {
-    if (files.length === 0) return;
-
-    const formData = new FormData();
-    formData.append("rag_collection_name", "");
-    files.forEach((file) => formData.append("files", file));
-
-    const { error } = await fetchApi(
-      `/rag_collection/${collectionId}/`,
-      "PATCH",
-      formData,
-      undefined,
-      "form-data"
-    );
-    if (!error) {
-      refetch();
-    } else {
-      toast.error(error);
-    }
-  };
+    createCollection,
+    indexFile,
+    indexAll,
+    deleteFile,
+    deleteCollection,
+    renameCollection,
+    addFilesToCollection,
+  } = useCollections();
 
   return (
     <div className="container mx-auto p-6 space-y-8 flex flex-col h-full">
@@ -151,7 +27,7 @@ export default function Collections() {
             Manage your RAG knowledge base collections.
           </p>
         </div>
-        <CreateCollectionDialog onCreate={handleCreateCollection} />
+        <CreateCollectionDialog />
       </div>
 
       <div className="flex-grow h-full">
@@ -191,43 +67,33 @@ export default function Collections() {
           )}
           RenderContent={(collections) => (
             <div className="grid gap-6 grid-cols-[repeat(auto-fill,minmax(320px,1fr))]">
-              {collections.map((collection) => (
-                <CollectionCard
-                  key={collection.id}
-                  name={collection.rag_collection_name}
-                  files={
-                    collection.documents?.map((d) => ({
-                      id: d.id?.toString() || "",
-                      name: d.original_document_name || d.unique_document_name,
-                      isIndexed: d.is_indexed || false,
-                    })) || []
-                  }
-                  onIndexFile={(fileId) =>
-                    handleIndex(collection.id?.toString() || "", fileId)
-                  }
-                  onIndexAll={() =>
-                    handleIndexAll(collection.id?.toString() || "")
-                  }
-                  onDeleteFile={(fileId) =>
-                    handleDeleteFile(collection.id?.toString() || "", fileId)
-                  }
-                  onDelete={() =>
-                    handleDeleteCollection(collection.id?.toString() || "")
-                  }
-                  onRename={(newName) =>
-                    handleRenameCollection(
-                      collection.id?.toString() || "",
-                      newName
-                    )
-                  }
-                  onAddFiles={(files) =>
-                    handleAddFilesToCollection(
-                      collection.id?.toString() || "",
-                      files
-                    )
-                  }
-                />
-              ))}
+              {collections.map((collection) => {
+                const collectionId = collection.id?.toString() || "";
+                return (
+                  <CollectionCard
+                    key={collectionId}
+                    name={collection.rag_collection_name}
+                    files={
+                      collection.documents?.map((d) => ({
+                        id: d.id?.toString() || "",
+                        name:
+                          d.original_document_name || d.unique_document_name,
+                        isIndexed: d.is_indexed || false,
+                      })) || []
+                    }
+                    onIndexFile={(fileId) => indexFile(collectionId, fileId)}
+                    onIndexAll={() => indexAll(collectionId)}
+                    onDeleteFile={(fileId) => deleteFile(collectionId, fileId)}
+                    onDelete={() => deleteCollection(collectionId)}
+                    onRename={(newName) =>
+                      renameCollection(collectionId, newName)
+                    }
+                    onAddFiles={(files) =>
+                      addFilesToCollection(collectionId, files)
+                    }
+                  />
+                );
+              })}
             </div>
           )}
         />

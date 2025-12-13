@@ -3,24 +3,12 @@ import { useDropzone } from "react-dropzone";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, UploadCloud, FileText, X } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { useCollections } from "@/contexts/CollectionsContext";
+import { GenericCreateEditModal } from "@/common/GenericCreateEditModal";
 
-interface CreateCollectionDialogProps {
-  onCreate: (name: string, files: File[]) => void;
-}
-
-export function CreateCollectionDialog({
-  onCreate,
-}: CreateCollectionDialogProps) {
+export function CreateCollectionDialog() {
+  const { createCollection } = useCollections();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [files, setFiles] = useState<File[]>([]);
@@ -41,9 +29,9 @@ export function CreateCollectionDialog({
     setFiles((prev) => prev.filter((_, index) => index !== indexToRemove));
   };
 
-  const handleCreate = () => {
+  const handleCreate = async (e: React.FormEvent) => {
     if (name.trim()) {
-      onCreate(name, files);
+      await createCollection(name, files);
       setName("");
       setFiles([]);
       setOpen(false);
@@ -51,20 +39,21 @@ export function CreateCollectionDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button className="gap-2">
-          <Plus size={16} /> New Collection
-        </Button>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Create Collection</DialogTitle>
-          <DialogDescription>
-            Add a new collection and upload a PDF document.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="grid gap-4 py-4">
+    <>
+      <Button className="gap-2" onClick={() => setOpen(true)}>
+        <Plus size={16} /> New Collection
+      </Button>
+
+      <GenericCreateEditModal
+        open={open}
+        onOpenChange={setOpen}
+        title="Create Collection"
+        description="Add a new collection and upload a PDF document."
+        onSubmit={handleCreate}
+        submitLabel="Create"
+        submitDisabled={!name.trim()}
+      >
+        <div className="grid gap-4">
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="name" className="text-right">
               Name
@@ -138,10 +127,7 @@ export function CreateCollectionDialog({
             </div>
           </div>
         </div>
-        <DialogFooter>
-          <Button onClick={handleCreate}>Create</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+      </GenericCreateEditModal>
+    </>
   );
 }

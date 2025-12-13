@@ -19,7 +19,7 @@ interface AuthContextType {
   isLoading: boolean;
 }
 
-export const AuthContext = createContext<AuthContextType | null>(null);
+const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isAuthenticate, setIsAuthenticate] = useState(false);
@@ -64,6 +64,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => {
   const context = useContext(AuthContext);
 

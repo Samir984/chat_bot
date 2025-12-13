@@ -3,18 +3,20 @@ export type { ChatApiDeleteConversationPathParams, ChatApiDeleteConversation200,
 export type { ChatApiDeleteRagCollectionPathParams, ChatApiDeleteRagCollection200, ChatApiDeleteRagCollectionMutationResponse, ChatApiDeleteRagCollectionMutation } from "./ChatApiDeleteRagCollection.ts";
 export type { ChatApiDeleteRagCollectionDocumentPathParams, ChatApiDeleteRagCollectionDocument200, ChatApiDeleteRagCollectionDocumentMutationResponse, ChatApiDeleteRagCollectionDocumentMutation } from "./ChatApiDeleteRagCollectionDocument.ts";
 export type { ChatApiGetConversationPathParams, ChatApiGetConversation200, ChatApiGetConversationQueryResponse, ChatApiGetConversationQuery } from "./ChatApiGetConversation.ts";
-export type { ChatApiGetIndexingStatusPathParams, ChatApiGetIndexingStatus200, ChatApiGetIndexingStatusQueryResponse, ChatApiGetIndexingStatusQuery } from "./ChatApiGetIndexingStatus.ts";
+export type { ChatApiGetIndexingStatusPathParams, ChatApiGetIndexingStatus200, ChatApiGetIndexingStatus202, ChatApiGetIndexingStatusQueryResponse, ChatApiGetIndexingStatusQuery } from "./ChatApiGetIndexingStatus.ts";
 export type { ChatApiGetUserConversationsList200, ChatApiGetUserConversationsListQueryResponse, ChatApiGetUserConversationsListQuery } from "./ChatApiGetUserConversationsList.ts";
+export type { ChatApiIndexAllDocumentsPathParams, ChatApiIndexAllDocuments200, ChatApiIndexAllDocuments202, ChatApiIndexAllDocumentsMutationResponse, ChatApiIndexAllDocumentsMutation } from "./ChatApiIndexAllDocuments.ts";
+export type { ChatApiIndexRagCollectionDocumentPathParams, ChatApiIndexRagCollectionDocument200, ChatApiIndexRagCollectionDocument202, ChatApiIndexRagCollectionDocumentMutationResponse, ChatApiIndexRagCollectionDocumentMutation } from "./ChatApiIndexRagCollectionDocument.ts";
 export type { ChatApiListUserRagCollections200, ChatApiListUserRagCollectionsQueryResponse, ChatApiListUserRagCollectionsQuery } from "./ChatApiListUserRagCollections.ts";
 export type { ChatApiPublicSendMessage200, ChatApiPublicSendMessageMutationRequest, ChatApiPublicSendMessageMutationResponse, ChatApiPublicSendMessageMutation } from "./ChatApiPublicSendMessage.ts";
 export type { ChatApiSendMessage200, ChatApiSendMessage400, ChatApiSendMessageMutationRequest, ChatApiSendMessageMutationResponse, ChatApiSendMessageMutation } from "./ChatApiSendMessage.ts";
-export type { ChatApiStartIndexingPathParams, ChatApiStartIndexing200, ChatApiStartIndexing202, ChatApiStartIndexingQueryResponse, ChatApiStartIndexingQuery } from "./ChatApiStartIndexing.ts";
 export type { ChatApiUpdateRagCollectionPathParams, ChatApiUpdateRagCollection200, ChatApiUpdateRagCollection400, ChatApiUpdateRagCollectionMutationRequest, ChatApiUpdateRagCollectionMutationResponse, ChatApiUpdateRagCollectionMutation } from "./ChatApiUpdateRagCollection.ts";
 export type { ChatRequestSchema } from "./ChatRequestSchema.ts";
 export type { ChatResponseSchema } from "./ChatResponseSchema.ts";
 export type { ConversationListResponseSchema } from "./ConversationListResponseSchema.ts";
 export type { GenericSchema } from "./GenericSchema.ts";
 export type { GoogleLoginSchema } from "./GoogleLoginSchema.ts";
+export type { IndexingStatusResponseSchemaStatusEnumKey, IndexingStatusResponseSchema } from "./IndexingStatusResponseSchema.ts";
 export type { MessageSchema } from "./MessageSchema.ts";
 export type { PublicChatRequestSchema } from "./PublicChatRequestSchema.ts";
 export type { RAGCollectionListSchema } from "./RAGCollectionListSchema.ts";
@@ -30,4 +32,5 @@ export type { UserApiRegisterUser200, UserApiRegisterUserMutationRequest, UserAp
 export type { UserLoginSchema } from "./UserLoginSchema.ts";
 export type { UserRegisterSchema } from "./UserRegisterSchema.ts";
 export type { UserSchema } from "./UserSchema.ts";
+export { indexingStatusResponseSchemaStatusEnum } from "./IndexingStatusResponseSchema.ts";
 export { roleChoicesEnum } from "./RoleChoices.ts";

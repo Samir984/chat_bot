@@ -3,7 +3,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { EllipsisVertical, Edit, Trash, Plus } from "lucide-react";

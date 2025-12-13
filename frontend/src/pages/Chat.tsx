@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import MessageList from "@/components/MessageList";
 import ChatInput from "@/components/chat/ChatInput";
-import { useAuth } from "@/context/AuthProvider";
+import { useAuth } from "@/contexts/AuthProvider";
 import { fetchApi } from "@/services/api";
 import { toast } from "sonner";
 import {

@@ -3,18 +3,20 @@ export type { ChatApiDeleteConversationPathParams, ChatApiDeleteConversation200,
 export type { ChatApiDeleteRagCollectionPathParams, ChatApiDeleteRagCollection200, ChatApiDeleteRagCollectionMutationResponse, ChatApiDeleteRagCollectionMutation } from "./types/ChatApiDeleteRagCollection.ts";
 export type { ChatApiDeleteRagCollectionDocumentPathParams, ChatApiDeleteRagCollectionDocument200, ChatApiDeleteRagCollectionDocumentMutationResponse, ChatApiDeleteRagCollectionDocumentMutation } from "./types/ChatApiDeleteRagCollectionDocument.ts";
 export type { ChatApiGetConversationPathParams, ChatApiGetConversation200, ChatApiGetConversationQueryResponse, ChatApiGetConversationQuery } from "./types/ChatApiGetConversation.ts";
-export type { ChatApiGetIndexingStatusPathParams, ChatApiGetIndexingStatus200, ChatApiGetIndexingStatusQueryResponse, ChatApiGetIndexingStatusQuery } from "./types/ChatApiGetIndexingStatus.ts";
+export type { ChatApiGetIndexingStatusPathParams, ChatApiGetIndexingStatus200, ChatApiGetIndexingStatus202, ChatApiGetIndexingStatusQueryResponse, ChatApiGetIndexingStatusQuery } from "./types/ChatApiGetIndexingStatus.ts";
 export type { ChatApiGetUserConversationsList200, ChatApiGetUserConversationsListQueryResponse, ChatApiGetUserConversationsListQuery } from "./types/ChatApiGetUserConversationsList.ts";
+export type { ChatApiIndexAllDocumentsPathParams, ChatApiIndexAllDocuments200, ChatApiIndexAllDocuments202, ChatApiIndexAllDocumentsMutationResponse, ChatApiIndexAllDocumentsMutation } from "./types/ChatApiIndexAllDocuments.ts";
+export type { ChatApiIndexRagCollectionDocumentPathParams, ChatApiIndexRagCollectionDocument200, ChatApiIndexRagCollectionDocument202, ChatApiIndexRagCollectionDocumentMutationResponse, ChatApiIndexRagCollectionDocumentMutation } from "./types/ChatApiIndexRagCollectionDocument.ts";
 export type { ChatApiListUserRagCollections200, ChatApiListUserRagCollectionsQueryResponse, ChatApiListUserRagCollectionsQuery } from "./types/ChatApiListUserRagCollections.ts";
 export type { ChatApiPublicSendMessage200, ChatApiPublicSendMessageMutationRequest, ChatApiPublicSendMessageMutationResponse, ChatApiPublicSendMessageMutation } from "./types/ChatApiPublicSendMessage.ts";
 export type { ChatApiSendMessage200, ChatApiSendMessage400, ChatApiSendMessageMutationRequest, ChatApiSendMessageMutationResponse, ChatApiSendMessageMutation } from "./types/ChatApiSendMessage.ts";
-export type { ChatApiStartIndexingPathParams, ChatApiStartIndexing200, ChatApiStartIndexing202, ChatApiStartIndexingQueryResponse, ChatApiStartIndexingQuery } from "./types/ChatApiStartIndexing.ts";
 export type { ChatApiUpdateRagCollectionPathParams, ChatApiUpdateRagCollection200, ChatApiUpdateRagCollection400, ChatApiUpdateRagCollectionMutationRequest, ChatApiUpdateRagCollectionMutationResponse, ChatApiUpdateRagCollectionMutation } from "./types/ChatApiUpdateRagCollection.ts";
 export type { ChatRequestSchema } from "./types/ChatRequestSchema.ts";
 export type { ChatResponseSchema } from "./types/ChatResponseSchema.ts";
 export type { ConversationListResponseSchema } from "./types/ConversationListResponseSchema.ts";
 export type { GenericSchema } from "./types/GenericSchema.ts";
 export type { GoogleLoginSchema } from "./types/GoogleLoginSchema.ts";
+export type { IndexingStatusResponseSchemaStatusEnumKey, IndexingStatusResponseSchema } from "./types/IndexingStatusResponseSchema.ts";
 export type { MessageSchema } from "./types/MessageSchema.ts";
 export type { PublicChatRequestSchema } from "./types/PublicChatRequestSchema.ts";
 export type { RAGCollectionListSchema } from "./types/RAGCollectionListSchema.ts";
@@ -30,4 +32,5 @@ export type { UserApiRegisterUser200, UserApiRegisterUserMutationRequest, UserAp
 export type { UserLoginSchema } from "./types/UserLoginSchema.ts";
 export type { UserRegisterSchema } from "./types/UserRegisterSchema.ts";
 export type { UserSchema } from "./types/UserSchema.ts";
+export { indexingStatusResponseSchemaStatusEnum } from "./types/IndexingStatusResponseSchema.ts";
 export { roleChoicesEnum } from "./types/RoleChoices.ts";

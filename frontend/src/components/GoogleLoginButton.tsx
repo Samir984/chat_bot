@@ -3,7 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Google } from "@ridemountainpig/svgl-react";
 import { useGoogleLogin } from "@react-oauth/google";
 import { fetchApi } from "@/services/api";
-import { useAuth } from "@/context/AuthProvider";
+import { useAuth } from "@/contexts/AuthProvider";
 import type { UserApiGoogleLogin200 } from "@/gen/types";
 import { toast } from "sonner";
 import UserProfile from "@/components/UserProfile";

@@ -2,10 +2,10 @@ import { useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Folder } from "lucide-react";
 import { CollectionFileItem } from "./CollectionFileItem";
-import { DeleteConfirmationDialog } from "./DeleteConfirmationDialog";
 import { CollectionActions } from "./CollectionActions";
 import { RenameCollectionDialog } from "./RenameCollectionDialog";
 import { AddDocumentDialog } from "./AddDocumentDialog";
+import { GenericDeleteConfirmationModal } from "@/common/GenericDeleteConfirmationModal";
 
 interface CollectionFile {
   id: string;
@@ -42,6 +42,12 @@ export default function CollectionCard({
     if (fileToDelete) {
       onDeleteFile(fileToDelete);
       setFileToDelete(null);
+    }
+  };
+  const confirmDeleteCollection = () => {
+    if (showDelete) {
+      onDelete();
+      setShowDelete(false);
     }
   };
 
@@ -85,21 +91,17 @@ export default function CollectionCard({
         </CardContent>
       </Card>
 
-      <DeleteConfirmationDialog
+      <GenericDeleteConfirmationModal
         open={!!fileToDelete}
         onOpenChange={(open) => !open && setFileToDelete(null)}
         onConfirm={confirmDeleteFile}
         title="Delete File"
         description="Are you sure you want to delete this file? This action cannot be undone."
       />
-
-      <DeleteConfirmationDialog
+      <GenericDeleteConfirmationModal
         open={showDelete}
         onOpenChange={setShowDelete}
-        onConfirm={() => {
-          onDelete();
-          setShowDelete(false);
-        }}
+        onConfirm={confirmDeleteCollection}
         title="Delete Collection"
         description={`Are you sure you want to delete the collection "${name}"? This will also delete all files within it.`}
       />

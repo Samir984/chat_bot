@@ -3,7 +3,8 @@ import { GoogleOAuthProvider } from "@react-oauth/google";
 import Layout from "@/components/Layout";
 import Chat from "@/pages/Chat";
 import Collections from "@/pages/Collections";
-import { AuthProvider } from "@/context/AuthProvider";
+import { AuthProvider } from "@/contexts/AuthProvider";
+import { CollectionsProvider } from "@/contexts/CollectionsContext";
 import { Toaster } from "sonner";
 
 const routes = [
@@ -26,8 +27,10 @@ export default function App() {
       <GoogleOAuthProvider
         clientId={import.meta.env.VITE_GOOGLE_OAUTH_CLIENT_ID}
       >
-        <RouterProvider router={router} />
-        <Toaster />
+        <CollectionsProvider>
+          <RouterProvider router={router} />
+          <Toaster />
+        </CollectionsProvider>
       </GoogleOAuthProvider>
     </AuthProvider>
   );

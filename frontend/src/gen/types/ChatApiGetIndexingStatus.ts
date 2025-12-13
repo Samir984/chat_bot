@@ -4,6 +4,7 @@
 */
 
 import type { GenericSchema } from "./GenericSchema.ts";
+import type { IndexingStatusResponseSchema } from "./IndexingStatusResponseSchema.ts";
 
 export type ChatApiGetIndexingStatusPathParams = {
     /**
@@ -17,10 +18,15 @@ export type ChatApiGetIndexingStatusPathParams = {
 */
 export type ChatApiGetIndexingStatus200 = GenericSchema;
 
-export type ChatApiGetIndexingStatusQueryResponse = ChatApiGetIndexingStatus200;
+/**
+ * @description Accepted
+*/
+export type ChatApiGetIndexingStatus202 = IndexingStatusResponseSchema;
+
+export type ChatApiGetIndexingStatusQueryResponse = (ChatApiGetIndexingStatus200 | ChatApiGetIndexingStatus202);
 
 export type ChatApiGetIndexingStatusQuery = {
-    Response: ChatApiGetIndexingStatus200;
+    Response: ChatApiGetIndexingStatus200 | ChatApiGetIndexingStatus202;
     PathParams: ChatApiGetIndexingStatusPathParams;
     Errors: any;
 };

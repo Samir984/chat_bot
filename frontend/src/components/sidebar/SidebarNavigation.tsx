@@ -1,7 +1,7 @@
 import { Folder, SquarePen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
-import { useAuth } from "@/context/AuthProvider";
+import { useAuth } from "@/contexts/AuthProvider";
 
 export function SidebarNavigation() {
   const { isAuthenticate } = useAuth();

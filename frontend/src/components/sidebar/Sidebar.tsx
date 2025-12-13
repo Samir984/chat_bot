@@ -5,7 +5,7 @@ import {
 } from "@/components/ui/sidebar";
 import { SidebarHistory } from "./SidebarHistory";
 import { SidebarNavigation } from "./SidebarNavigation";
-import { useAuth } from "@/context/AuthProvider";
+import { useAuth } from "@/contexts/AuthProvider";
 
 export default function Sidebar() {
   const { isAuthenticate } = useAuth();

@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { Plus, Folder, Search } from "lucide-react";
+import { Plus, Folder, Search, CheckCircle2, Ban } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useFetch } from "@/hooks/useFetch";
@@ -48,11 +48,13 @@ export default function CollectionSelector({
     const collection = collections?.find(
       (c) => (c.id?.toString() || "") === collectionId
     );
-    if (collection) {
+
+    const hasIndexedDocs = collection?.documents?.some((d) => d.is_indexed);
+    if (collection && hasIndexedDocs) {
       onCollectionSelect(collection);
+      setSearchQuery("");
+      setIsOpen(false);
     }
-    setSearchQuery("");
-    setIsOpen(false);
   };
 
   const filteredCollections = collections?.filter((collection) =>
@@ -100,25 +102,56 @@ export default function CollectionSelector({
 
             <div className="max-h-64 overflow-y-auto py-1">
               {filteredCollections && filteredCollections.length > 0 ? (
-                filteredCollections.map((collection) => (
-                  <button
-                    key={collection.id?.toString() || ""}
-                    onClick={() =>
-                      handleCollectionSelect(collection.id?.toString() || "")
-                    }
-                    className="w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded-sm hover:bg-accent hover:text-accent-foreground transition-colors text-left"
-                  >
-                    <Folder className="h-4 w-4 text-muted-foreground" />
-                    <span className="font-medium">
-                      {collection.rag_collection_name}
-                    </span>
-                  </button>
-                ))
+                filteredCollections.map((collection) => {
+                  const hasIndexedDocs = collection.documents?.some(
+                    (d) => d.is_indexed
+                  );
+                  const isDisabled = !hasIndexedDocs;
+                  return (
+                    <button
+                      key={collection.id?.toString() || ""}
+                      onClick={() =>
+                        handleCollectionSelect(collection.id?.toString() || "")
+                      }
+                      disabled={isDisabled}
+                      className={cn(
+                        "w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded-sm transition-colors text-left",
+                        isDisabled
+                          ? "opacity-60 cursor-not-allowed"
+                          : "hover:bg-accent hover:text-accent-foreground"
+                      )}
+                    >
+                      <div
+                        className={cn(
+                          "flex items-center justify-center h-6 w-6 rounded-full",
+                          hasIndexedDocs
+                            ? "bg-emerald-100 text-emerald-600"
+                            : "bg-muted text-muted-foreground"
+                        )}
+                      >
+                        {hasIndexedDocs ? (
+                          <CheckCircle2 className="h-3.5 w-3.5" />
+                        ) : (
+                          <Ban className="h-3.5 w-3.5" />
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Folder className="h-4 w-4 text-muted-foreground" />
+                        <span className="font-medium">
+                          {collection.rag_collection_name}
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })
               ) : (
                 <div className="px-3 py-2.5 text-sm text-muted-foreground text-center">
                   No collections found
                 </div>
               )}
+            </div>
+            <div className="px-2 py-1 text-xs text-muted-foreground">
+              Only collections with indexed documents can be selected.
             </div>
           </div>
         </div>
