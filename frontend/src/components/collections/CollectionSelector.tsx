@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useFetch } from "@/hooks/useFetch";
 import type { RAGCollectionListSchema } from "@/gen/types/RAGCollectionListSchema";
+import { useCollections } from "@/contexts/CollectionsContext";
 
 interface CollectionSelectorProps {
   selectedCollection: RAGCollectionListSchema | null;
@@ -16,9 +17,7 @@ export default function CollectionSelector({
   onCollectionSelect,
   disabled,
 }: CollectionSelectorProps) {
-  const { data: collections, isLoading: isCollectionsLoading } = useFetch<
-    RAGCollectionListSchema[]
-  >("/rag_collection/list/", "GET");
+  const { collections } = useCollections();
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);

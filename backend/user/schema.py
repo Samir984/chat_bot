@@ -31,4 +31,3 @@ class UserSchema(Schema):
 
 class LoginResponseSchema(Schema):
     user: UserSchema
-

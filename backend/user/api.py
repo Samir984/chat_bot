@@ -27,6 +27,7 @@ users = Router()
 
 print("cookie_auth", cookie_auth)
 
+
 @users.post("/register/")
 def register_user(request: HttpRequest, data: UserRegisterSchema):
     if User.objects.filter(email=data.email).exists():
@@ -61,9 +62,11 @@ def login_user(request: HttpRequest, data: UserLoginSchema):
 
     return response_obj
 
+
 import requests
 
-@users.post("/google-login/", response={200: UserSchema,400: GenericSchema})
+
+@users.post("/google-login/", response={200: UserSchema, 400: GenericSchema})
 def google_login(request: HttpRequest, data: GoogleLoginSchema):
     try:
         google_response = requests.get(
@@ -76,14 +79,13 @@ def google_login(request: HttpRequest, data: GoogleLoginSchema):
 
         id_info = google_response.json()
         print("id_info", id_info)
-   
+
         email = id_info.get("email")
         first_name = id_info.get("given_name", "")
         last_name = id_info.get("family_name", "")
 
         # Check if user exists
         user = User.objects.filter(email=email).first()
-
 
         if not user:
             # Create user if not exists

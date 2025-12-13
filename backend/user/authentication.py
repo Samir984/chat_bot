@@ -8,11 +8,11 @@ from user.models import User
 
 class CookieJWTAuth:
     def __call__(self, request: HttpRequest):
-   
+
         access_token = request.COOKIES.get("access_token")
         if not access_token:
             return None
-        
+
         try:
             validated_token = AccessToken(access_token)
             user_id = validated_token.get("user_id")
@@ -23,5 +23,3 @@ class CookieJWTAuth:
         except Exception as e:
             print(f"Authentication error: {e}")
             return None
-
-   

@@ -9,7 +9,6 @@ export default function Collections() {
     collections,
     isLoading,
     error,
-    createCollection,
     indexFile,
     indexAll,
     deleteFile,

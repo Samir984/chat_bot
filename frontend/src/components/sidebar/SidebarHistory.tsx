@@ -20,20 +20,6 @@ export function SidebarHistory() {
     error,
     refetch,
   } = useFetch<ConversationListResponseSchema[]>("/conversation/list/");
-  const [openEditConversationModal, setOpenEditConversationModal] =
-    useState<boolean>(false);
-  const [openDeleteConfirmationModal, setOpenDeleteConfirmationModal] =
-    useState<boolean>(false);
-
-  const handleEditConversation = (conversationId: string) => {
-    setOpenEditConversationModal(true);
-    console.log("conversationId", conversationId);
-  };
-
-  const handleDeleteConversation = (conversationId: string) => {
-    setOpenDeleteConfirmationModal(true);
-    console.log("conversationId", conversationId);
-  };
 
   const recent = recentChats ?? [];
 
@@ -55,8 +41,8 @@ export function SidebarHistory() {
                     <SidebarHistoryItem
                       key={chat.conversation_id}
                       chat={chat}
-                      onEdit={handleEditConversation}
-                      onDelete={handleDeleteConversation}
+                      refetch={refetch}
+                   
                     />
                   ))
                 }
@@ -65,7 +51,6 @@ export function SidebarHistory() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-     
     </>
   );
 }

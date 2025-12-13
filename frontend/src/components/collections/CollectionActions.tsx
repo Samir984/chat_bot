@@ -36,7 +36,7 @@ export function CollectionActions({
         </DropdownMenuItem>
         <DropdownMenuItem onClick={onEdit}>
           <Edit className="mr-2 h-4 w-4" />
-          Edit
+          Rename
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={onDelete}

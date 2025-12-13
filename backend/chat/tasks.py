@@ -9,7 +9,9 @@ from chat.qdrant_client import get_or_create_vector_store
 
 
 @shared_task(bind=True)
-def start_indexing_documents(self, rag_collection_id: int, qdrant_collection_name: str, document_id: int):
+def start_indexing_documents(
+    self, rag_collection_id: int, qdrant_collection_name: str, document_id: int
+):
     # Import vector_store inside the function to avoid initializing embeddings at import time
     print("Starting indexing documents")
 

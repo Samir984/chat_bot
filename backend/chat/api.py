@@ -156,6 +156,18 @@ def get_conversation(request: HttpRequest, conversation_id: UUID):
     )
 
 
+@conversation.patch(
+    "/{conversation_id}/", response={200: GenericSchema, 400: GenericSchema}, auth=cookie_auth
+)
+def update_conversation(request: HttpRequest, conversation_id: UUID, conversation_title: str):
+        conversation = get_object_or_404(
+            Conversation, id=conversation_id, user=request.auth
+        )
+        conversation.conversation_title = conversation_title
+        conversation.save()
+        return 200, GenericSchema(detail="Conversation updated successfully")
+   
+
 @conversation.delete(
     "/{conversation_id}/", response={200: GenericSchema}, auth=cookie_auth
 )
@@ -358,7 +370,7 @@ def index_rag_collection_document(request: HttpRequest, rag_collection_id: int, 
         return 200, GenericSchema(detail="Document is already indexed")
     # start indexing document in background
     async_result = start_indexing_documents.delay(
-        rag_collection_id, rag_collection.qdrant_collection_name, document_id
+        rag_collection_id, rag_collection.qdrant_collection_name,
     )
     return 202, StartIndexingResponseSchema(task_id=async_result.id)
 

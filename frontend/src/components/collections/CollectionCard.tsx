@@ -34,9 +34,9 @@ export default function CollectionCard({
   onAddFiles,
 }: CollectionCardProps) {
   const [fileToDelete, setFileToDelete] = useState<string | null>(null);
-  const [showRename, setShowRename] = useState(false);
-  const [showAddDoc, setShowAddDoc] = useState(false);
-  const [showDelete, setShowDelete] = useState(false);
+  const [showRenameModal, setShowRenameModal] = useState(false);
+  const [showAddDocModal, setShowAddDocModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const confirmDeleteFile = () => {
     if (fileToDelete) {
@@ -45,9 +45,9 @@ export default function CollectionCard({
     }
   };
   const confirmDeleteCollection = () => {
-    if (showDelete) {
+    if (showDeleteModal) {
       onDelete();
-      setShowDelete(false);
+      setShowDeleteModal(false);
     }
   };
 
@@ -63,9 +63,9 @@ export default function CollectionCard({
               <span className="text-sm">{name}</span>
             </CardTitle>
             <CollectionActions
-              onEdit={() => setShowRename(true)}
-              onAddDocument={() => setShowAddDoc(true)}
-              onDelete={() => setShowDelete(true)}
+              onEdit={() => setShowRenameModal(true)}
+              onAddDocument={() => setShowAddDocModal(true)}
+              onDelete={() => setShowDeleteModal(true)}
             />
           </div>
         </CardHeader>
@@ -99,23 +99,23 @@ export default function CollectionCard({
         description="Are you sure you want to delete this file? This action cannot be undone."
       />
       <GenericDeleteConfirmationModal
-        open={showDelete}
-        onOpenChange={setShowDelete}
+        open={showDeleteModal}
+        onOpenChange={setShowDeleteModal}
         onConfirm={confirmDeleteCollection}
         title="Delete Collection"
         description={`Are you sure you want to delete the collection "${name}"? This will also delete all files within it.`}
       />
 
       <RenameCollectionDialog
-        open={showRename}
-        onOpenChange={setShowRename}
+        open={showRenameModal}
+        onOpenChange={setShowRenameModal}
         currentName={name}
         onRename={onRename}
       />
 
       <AddDocumentDialog
-        open={showAddDoc}
-        onOpenChange={setShowAddDoc}
+        open={showAddDocModal}
+        onOpenChange={setShowAddDocModal}
         onAdd={onAddFiles}
       />
     </>
