@@ -2,7 +2,6 @@ import { useEffect, useState, useRef } from "react";
 import { Plus, Folder, Search, CheckCircle2, Ban } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { useFetch } from "@/hooks/useFetch";
 import type { RAGCollectionListSchema } from "@/gen/types/RAGCollectionListSchema";
 import { useCollections } from "@/contexts/CollectionsContext";
 
@@ -32,7 +31,6 @@ export default function CollectionSelector({
         setIsOpen(false);
       }
     };
-
     if (isOpen) {
       document.addEventListener("mousedown", handleClickOutside);
       inputRef.current?.focus();

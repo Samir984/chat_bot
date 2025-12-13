@@ -3,7 +3,9 @@ export const hasData = <T>(data: T[] | null | undefined): boolean => {
   return Array.isArray(data) && data.length > 0;
 };
 
-export const computeHeaders = (dataFormat?: DataFormat): Record<string, string> => {
+export const computeHeaders = (
+  dataFormat?: DataFormat
+): Record<string, string> => {
   return dataFormat === "form-data"
     ? {}
     : {
@@ -11,6 +13,13 @@ export const computeHeaders = (dataFormat?: DataFormat): Record<string, string> 
       };
 };
 
-export const computeBody = (body?: unknown, dataFormat?: DataFormat): unknown => {
+export const computeBody = (
+  body?: unknown,
+  dataFormat?: DataFormat
+): unknown => {
   return dataFormat === "form-data" ? body : JSON.stringify(body);
+};
+
+export const isNotObjectObjectString = (payload: string): boolean => {
+  return payload !== "[object Object]";
 };

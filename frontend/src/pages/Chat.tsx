@@ -15,6 +15,7 @@ import { v4 as uuidv4 } from "uuid";
 
 import { filterHistoryMessages } from "@/utils/global";
 import { useNavigate, useParams } from "react-router-dom";
+import { isNotObjectObjectString } from "@/utils/helper";
 
 export default function Chat() {
   const { id } = useParams();
@@ -51,7 +52,11 @@ export default function Chat() {
         );
       }
       if (error) {
-        toast.error(error);
+        toast.error(
+          isNotObjectObjectString(error)
+            ? error
+            : "Error fetching conversation history"
+        );
       }
       setIsLoadingChat(false);
     };
