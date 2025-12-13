@@ -1,39 +1,33 @@
-import { useState, useCallback } from "react";
-import { useDropzone } from "react-dropzone";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, UploadCloud, FileText, X } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { useCollections } from "@/contexts/CollectionsContext";
 import { GenericCreateEditModal } from "@/common/GenericCreateEditModal";
+import { useFileUpload } from "@/hooks/useFileUpload";
 
 export function CreateCollectionDialog() {
   const { createCollection } = useCollections();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
-  const [files, setFiles] = useState<File[]>([]);
-
-  const onDrop = useCallback((acceptedFiles: File[]) => {
-    setFiles((prev) => [...prev, ...acceptedFiles]);
-  }, []);
-
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop,
-    accept: {
-      "application/pdf": [".pdf"],
-    },
-    multiple: true,
-  });
-
-  const removeFile = (indexToRemove: number) => {
-    setFiles((prev) => prev.filter((_, index) => index !== indexToRemove));
-  };
+  const {
+    files,
+    fileInputRef,
+    handleFileChange,
+    removeFile,
+    handleDragOver,
+    handleDrop,
+    clearFiles,
+    openFileDialog,
+  } = useFileUpload();
 
   const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (name.trim()) {
       await createCollection(name, files);
       setName("");
-      setFiles([]);
+      clearFiles();
       setOpen(false);
     }
   };
@@ -73,14 +67,19 @@ export function CreateCollectionDialog() {
             </Label>
             <div className="col-span-3 space-y-3">
               <div
-                {...getRootProps()}
-                className={`border-2 border-dashed rounded-lg p-3 text-center cursor-pointer transition-colors ${
-                  isDragActive
-                    ? "border-primary bg-primary/5"
-                    : "border-muted-foreground/25 hover:border-primary/50"
-                }`}
+                className="border-2 border-dashed rounded-lg p-3 text-center cursor-pointer transition-colors border-muted-foreground/25 hover:border-primary/50"
+                onClick={openFileDialog}
+                onDragOver={handleDragOver}
+                onDrop={handleDrop}
               >
-                <input {...getInputProps()} />
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  className="hidden"
+                  multiple
+                  accept=".pdf"
+                  onChange={handleFileChange}
+                />
                 <div className="flex flex-col items-center gap-2 text-muted-foreground">
                   <UploadCloud className="h-8 w-8" />
                   <div className="text-xs">

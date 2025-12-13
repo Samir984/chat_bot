@@ -1,8 +1,8 @@
-import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Upload, FileText, X } from "lucide-react";
 import { GenericCreateEditModal } from "@/common/GenericCreateEditModal";
+import { useFileUpload } from "@/hooks/useFileUpload";
 
 interface AddDocumentDialogProps {
   open: boolean;
@@ -15,37 +15,22 @@ export function AddDocumentDialog({
   onOpenChange,
   onAdd,
 }: AddDocumentDialogProps) {
-  const [files, setFiles] = useState<File[]>([]);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      setFiles((prev) => [...prev, ...Array.from(e.target.files || [])]);
-    }
-  };
-
-  const removeFile = (index: number) => {
-    setFiles((prev) => prev.filter((_, i) => i !== index));
-  };
+  const {
+    files,
+    fileInputRef,
+    handleFileChange,
+    removeFile,
+    handleDragOver,
+    handleDrop,
+    clearFiles,
+    openFileDialog,
+  } = useFileUpload();
 
   const handleSubmit = () => {
     if (files.length > 0) {
       onAdd(files);
-      setFiles([]);
+      clearFiles();
       onOpenChange(false);
-    }
-  };
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      setFiles((prev) => [...prev, ...Array.from(e.dataTransfer.files)]);
     }
   };
 
@@ -64,7 +49,7 @@ export function AddDocumentDialog({
       <div className="grid gap-4">
         <div
           className="border-2 border-dashed rounded-lg p-8 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-accent/50 transition-colors"
-          onClick={() => fileInputRef.current?.click()}
+          onClick={openFileDialog}
           onDragOver={handleDragOver}
           onDrop={handleDrop}
         >
