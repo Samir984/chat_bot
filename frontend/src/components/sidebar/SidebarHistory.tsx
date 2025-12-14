@@ -10,11 +10,12 @@ import {
 } from "@/components/ui/sidebar";
 import { RenderData } from "@/components/RenderData";
 import type { ConversationListResponseSchema } from "@/gen";
+import { useSidebar } from "@/components/ui/sidebar";
 import { useFetch } from "@/hooks/useFetch";
-import { useParams } from "react-router-dom";
 
 export function SidebarHistory() {
-  const { id } = useParams();
+  const { sideBarContentRefetch, setSideBarContentRefetch } = useSidebar();
+  console.log("render history", sideBarContentRefetch);
   const {
     data: recentChats,
     setData: setRecentChats,
@@ -24,12 +25,11 @@ export function SidebarHistory() {
   } = useFetch<ConversationListResponseSchema[]>("/conversation/list/");
 
   useEffect(() => {
-    if (id) {
+    if (sideBarContentRefetch) {
       refetch();
+      setSideBarContentRefetch(false);
     }
-  }, [id, refetch]);
-
-  const recent = recentChats ?? [];
+  }, [sideBarContentRefetch]);
 
   return (
     <>
@@ -41,7 +41,7 @@ export function SidebarHistory() {
           <SidebarGroupContent>
             <SidebarMenu className="space-y-0.5">
               <RenderData
-                data={recent}
+                data={recentChats}
                 isLoading={isLoading}
                 error={error}
                 RenderContent={(data) =>

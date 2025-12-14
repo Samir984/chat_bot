@@ -40,6 +40,9 @@ type SidebarContextProps = {
   setOpenMobile: (open: boolean) => void;
   isMobile: boolean;
   toggleSidebar: () => void;
+  // modified property to trigger sidebar content refetch
+  sideBarContentRefetch: boolean;
+  setSideBarContentRefetch: (refetch: boolean) => void;
 };
 
 const SidebarContext = React.createContext<SidebarContextProps | null>(null);
@@ -73,6 +76,10 @@ function SidebarProvider({
   // We use openProp and setOpenProp for control from outside the component.
   const [_open, _setOpen] = React.useState(defaultOpen);
   const open = openProp ?? _open;
+  // extra state to trigger sidebar content refetch
+  const [sideBarContentRefetch, setSideBarContentRefetch] =
+    React.useState(false);
+  console.log("render sidebar", sideBarContentRefetch);
   const setOpen = React.useCallback(
     (value: boolean | ((value: boolean) => boolean)) => {
       const openState = typeof value === "function" ? value(open) : value;
@@ -122,8 +129,20 @@ function SidebarProvider({
       openMobile,
       setOpenMobile,
       toggleSidebar,
+      sideBarContentRefetch,
+      setSideBarContentRefetch,
     }),
-    [state, open, setOpen, isMobile, openMobile, setOpenMobile, toggleSidebar]
+    [
+      state,
+      open,
+      setOpen,
+      isMobile,
+      openMobile,
+      setOpenMobile,
+      toggleSidebar,
+      sideBarContentRefetch,
+      setSideBarContentRefetch,
+    ]
   );
 
   return (

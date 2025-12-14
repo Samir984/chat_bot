@@ -1,17 +1,36 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { fetchApi } from "@/services/api";
+import { useLocalStorage } from "./useLocalStorage";
 
-export function useFetch<T>(url: string, method: string = "GET") {
-  const [isLoading, setIsLoading] = useState(true);
-  const [data, setData] = useState<T | null>(null);
+const CACHE_TIME = 5 * 60 * 1000; // 5 minutes
+
+export function useFetch<T>(
+  url: string,
+  method: string = "GET",
+  cacheTime: number = CACHE_TIME
+) {
+  const [isLoading, setIsLoading] = useState(false);
+  const {
+    value: data,
+    setValue: setData,
+    timestamp: dataTimestamp,
+  } = useLocalStorage<T | null>(url, null);
   const [error, setError] = useState<string | null>(null);
   const [triggerRefetch, setTriggerRefetch] = useState(0);
+  const refetchTriggerRef = useRef<boolean>(false);
   const refetch = useCallback(() => {
+    refetchTriggerRef.current = true;
     setTriggerRefetch((prev) => prev + 1);
   }, []);
 
   useEffect(() => {
     const abortController = new AbortController();
+    const now = Date.now();
+    const shouldFetch =
+      refetchTriggerRef.current ||
+      data === null ||
+      dataTimestamp === null ||
+      now - dataTimestamp > cacheTime;
 
     const fetchData = async () => {
       setIsLoading(true);
@@ -33,14 +52,23 @@ export function useFetch<T>(url: string, method: string = "GET") {
       }
 
       setIsLoading(false);
+      refetchTriggerRef.current = false;
     };
 
-    fetchData();
+    if (shouldFetch) {
+      fetchData();
+    }
 
     return () => {
       abortController.abort();
     };
-  }, [url, method, triggerRefetch]);
+  }, [url, method, triggerRefetch, setData, data, dataTimestamp, cacheTime]);
 
-  return { data, setData, isLoading, error, refetch };
+  return {
+    data,
+    setData,
+    isLoading,
+    error,
+    refetch,
+  };
 }

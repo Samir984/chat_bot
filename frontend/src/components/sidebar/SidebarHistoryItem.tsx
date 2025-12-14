@@ -7,6 +7,7 @@ import { SideBarAction } from "./SideBarAction";
 import { GenericDeleteConfirmationModal } from "@/common/GenericDeleteConfirmationModal";
 import { EditHistoryModel } from "./EditHistoryModel";
 import { fetchApi } from "@/services/api";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 interface Props {
@@ -15,6 +16,7 @@ interface Props {
 }
 
 export default function SidebarHistoryItem({ chat, refetch }: Props) {
+  const navigate = useNavigate();
   const [showEditHistoryModal, setShowEditHistoryModal] = useState(false);
   const [showDeleteHistoryModal, setShowDeleteHistoryModal] = useState(false);
 
@@ -25,6 +27,7 @@ export default function SidebarHistoryItem({ chat, refetch }: Props) {
     );
     if (!error) {
       refetch();
+      navigate(`/`);
     }
     setShowDeleteHistoryModal(false);
   };
