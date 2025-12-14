@@ -62,7 +62,7 @@ export function useFetch<T>(
     return () => {
       abortController.abort();
     };
-  }, [url, method, triggerRefetch, setData, data, dataTimestamp, cacheTime]);
+  }, [url, method, triggerRefetch]);
 
   return {
     data,

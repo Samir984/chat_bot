@@ -14,11 +14,14 @@ import type { Message } from "@/types/chat";
 import { v4 as uuidv4 } from "uuid";
 
 import { filterHistoryMessages } from "@/utils/global";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { isNotObjectObjectString } from "@/utils/helper";
+import { useSidebar } from "@/components/ui/sidebar";
 
 export default function Chat() {
   const { id } = useParams();
+  const { preventFetch } = useLocation().state || {};
+  const { setSideBarContentRefetch } = useSidebar();
   const { isAuthenticate } = useAuth();
   const [isChatting, setIsChatting] = useState(false);
   const [isLoadingChat, setIsLoadingChat] = useState(false);
@@ -28,6 +31,9 @@ export default function Chat() {
 
   useEffect(() => {
     const fetchConversation = async () => {
+      if (preventFetch) {
+        return;
+      }
       setIsLoadingChat(true);
 
       const abortController = new AbortController();
@@ -195,7 +201,10 @@ export default function Chat() {
         content: data.content,
       };
       setMessages((prev) => [...prev, aiMsg]);
-      navigate(`/conversation/${data.conversation_id}`);
+      navigate(`/conversation/${data.conversation_id}`, {
+        state: { preventFetch: true },
+      });
+      setSideBarContentRefetch(true);
     }
 
     if (error && !abortController.signal.aborted) {

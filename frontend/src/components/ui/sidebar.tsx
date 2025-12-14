@@ -79,7 +79,6 @@ function SidebarProvider({
   // extra state to trigger sidebar content refetch
   const [sideBarContentRefetch, setSideBarContentRefetch] =
     React.useState(false);
-  console.log("render sidebar", sideBarContentRefetch);
   const setOpen = React.useCallback(
     (value: boolean | ((value: boolean) => boolean)) => {
       const openState = typeof value === "function" ? value(open) : value;

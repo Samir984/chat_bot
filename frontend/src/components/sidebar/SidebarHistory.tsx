@@ -15,7 +15,7 @@ import { useFetch } from "@/hooks/useFetch";
 
 export function SidebarHistory() {
   const { sideBarContentRefetch, setSideBarContentRefetch } = useSidebar();
-  console.log("render history", sideBarContentRefetch);
+
   const {
     data: recentChats,
     setData: setRecentChats,
