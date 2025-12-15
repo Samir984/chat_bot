@@ -43,7 +43,6 @@ def register_user(request: HttpRequest, data: UserRegisterSchema):
 
 @users.post("/login/")
 def login_user(request: HttpRequest, data: UserLoginSchema):
-
     user = authenticate(request, email=data.email, password=data.password)
 
     if user is None:
