@@ -2,6 +2,7 @@ Django==5.*
 django-ninja==1.*
 django-ninja-jwt==5.*
 psycopg2-binary==2.9.11
+pydantic==2.11.10
 pydantic-settings==2.*
 django-storages
 boto3
