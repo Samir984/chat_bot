@@ -14,13 +14,13 @@ import type { Message } from "@/types/chat";
 import { v4 as uuidv4 } from "uuid";
 
 import { filterHistoryMessages } from "@/utils/global";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { isNotObjectObjectString } from "@/utils/helper";
 import { useSidebar } from "@/components/ui/sidebar";
 
 export default function Chat() {
   const { id } = useParams();
-  const { preventFetch } = useLocation().state || {};
+  const [preventRefetch, setPreventRefetch] = useState(false);
   const { setSideBarContentRefetch } = useSidebar();
   const { isAuthenticate } = useAuth();
   const [isChatting, setIsChatting] = useState(false);
@@ -31,7 +31,8 @@ export default function Chat() {
 
   useEffect(() => {
     const fetchConversation = async () => {
-      if (preventFetch) {
+      if (preventRefetch) {
+        setPreventRefetch(false);
         return;
       }
       setIsLoadingChat(true);
@@ -201,9 +202,8 @@ export default function Chat() {
         content: data.content,
       };
       setMessages((prev) => [...prev, aiMsg]);
-      navigate(`/conversation/${data.conversation_id}`, {
-        state: { preventFetch: true },
-      });
+      navigate(`/conversation/${data.conversation_id}`);
+
       setSideBarContentRefetch(true);
     }
 

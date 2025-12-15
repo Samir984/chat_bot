@@ -25,8 +25,6 @@ cookie_auth = CookieJWTAuth()
 api = NinjaAPI()
 users = Router()
 
-print("cookie_auth", cookie_auth)
-
 
 @users.post("/register/")
 def register_user(request: HttpRequest, data: UserRegisterSchema):
@@ -78,8 +76,7 @@ def google_login(request: HttpRequest, data: GoogleLoginSchema):
             return 400, GenericSchema(detail="Invalid Google token")
 
         id_info = google_response.json()
-        print("id_info", id_info)
-
+    
         email = id_info.get("email")
         first_name = id_info.get("given_name", "")
         last_name = id_info.get("family_name", "")
@@ -120,10 +117,7 @@ def google_login(request: HttpRequest, data: GoogleLoginSchema):
 
 @users.get("/get-me/", response={200: UserSchema}, auth=cookie_auth)
 def get_me(request: HttpRequest):
-    print("request.auth", request.auth)
-    print("request.auth", request)
     user = request.auth
-    print(user)
     return UserSchema(
         id=user.id,
         email=user.email,

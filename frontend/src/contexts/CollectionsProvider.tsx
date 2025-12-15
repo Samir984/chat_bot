@@ -12,12 +12,16 @@ interface CollectionsContextType {
   error: string | null;
   indexingTaskId: string | null;
   createCollection: (name: string, uploadedFiles: File[]) => Promise<void>;
-  indexFile: (collectionId: string, fileId: string) => Promise<void>;
-  indexAll: (collectionId: string) => void;
+  indexFile: (
+    collectionId: string,
+    fileId: string
+  ) => Promise<string | undefined>;
+  indexAll: (collectionId: string) => Promise<string | undefined>;
   deleteFile: (collectionId: string, fileId: string) => Promise<void>;
   deleteCollection: (collectionId: string) => Promise<void>;
   renameCollection: (collectionId: string, newName: string) => Promise<void>;
   addFilesToCollection: (collectionId: string, files: File[]) => Promise<void>;
+  refetch: () => void;
 }
 
 const CollectionsContext = createContext<CollectionsContextType | undefined>(
@@ -72,36 +76,37 @@ export function CollectionsProvider({ children }: CollectionsProviderProps) {
     if (data && "task_id" in data) {
       setIndexingTaskId(data.task_id);
       toast.success("Indexing started. Tracking task...");
-      return;
+      return data.task_id;
     }
 
     if (data && "detail" in data) {
       toast.success((data as { detail: string }).detail);
-      refetch();
-      return;
     }
 
-    if (error) toast.error(error);
+    if (error) {
+      toast.error(error);
+    }
   };
 
-  const indexAll = (collectionId: string) => {
-    setCollections(
-      (collections ?? []).map((collection) => {
-        if ((collection.id?.toString() || "") === collectionId) {
-          const allIndexed = (collection.documents ?? []).every(
-            (doc) => doc.is_indexed
-          );
-          return {
-            ...collection,
-            documents: (collection.documents ?? []).map((doc) => ({
-              ...doc,
-              is_indexed: !allIndexed,
-            })),
-          };
-        }
-        return collection;
-      })
+  const indexAll = async (collectionId: string) => {
+    const { data, error } = await fetchApi<StartIndexingResponseSchema>(
+      `/rag_collection/index-all-documents/${collectionId}/`,
+      "POST"
     );
+
+    if (data && "task_id" in data) {
+      setIndexingTaskId(data.task_id);
+      toast.success("Indexing all documents started...");
+      return data.task_id;
+    }
+
+    if (data && "detail" in data) {
+      toast.success((data as { detail: string }).detail);
+    }
+
+    if (error) {
+      toast.error(error);
+    }
   };
 
   const deleteFile = async (collectionId: string, fileId: string) => {
@@ -182,6 +187,7 @@ export function CollectionsProvider({ children }: CollectionsProviderProps) {
     deleteCollection,
     renameCollection,
     addFilesToCollection,
+    refetch,
   };
 
   return (

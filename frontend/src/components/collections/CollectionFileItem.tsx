@@ -6,24 +6,28 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { Loader2 } from "lucide-react";
+import type { RAGDocumentListSchema } from "@/gen/types/RAGDocumentListSchema";
 
-interface CollectionFile {
-  id: string;
-  name: string;
-  isIndexed: boolean;
-}
+import type { IndexingStatusResponseSchema } from "@/gen/types/IndexingStatusResponseSchema";
 
 interface CollectionFileItemProps {
-  file: CollectionFile;
+  file: RAGDocumentListSchema;
   onIndexFile: (fileId: string) => void;
   onDelete: (fileId: string) => void;
+  indexingStatus?: IndexingStatusResponseSchema | null;
 }
 
 export function CollectionFileItem({
   file,
   onIndexFile,
   onDelete,
+  indexingStatus,
 }: CollectionFileItemProps) {
+  const isIndexed = file.is_indexed || indexingStatus?.status === "SUCCESS";
+  const isIndexing =
+    indexingStatus?.status === "PENDING" ||
+    indexingStatus?.status === "PROGRESS";
   return (
     <div>
       <TooltipProvider>
@@ -34,7 +38,7 @@ export function CollectionFileItem({
             </div>
             <div className="flex flex-col min-w-0">
               <span className="text-sm font-medium truncate leading-none mb-1">
-                {file.name}
+                {file.unique_document_name}
               </span>
               <span className="text-[10px] text-muted-foreground flex items-center gap-1">
                 PDF • 2.4 MB
@@ -43,7 +47,7 @@ export function CollectionFileItem({
           </div>
 
           <div className="flex items-center gap-1 pl-2">
-            {file.isIndexed ? (
+            {isIndexed ? (
               <Tooltip>
                 <TooltipTrigger asChild>
                   <div className="h-7 w-7 flex items-center justify-center cursor-default">
@@ -54,6 +58,17 @@ export function CollectionFileItem({
                   <p>Document is indexed</p>
                 </TooltipContent>
               </Tooltip>
+            ) : isIndexing ? (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="h-7 w-7 flex items-center justify-center cursor-default">
+                    <Loader2 className="h-4 w-4 text-white animate-spin" />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Indexing: {Math.round(indexingStatus?.progress || 0)}%</p>
+                </TooltipContent>
+              </Tooltip>
             ) : (
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -61,7 +76,10 @@ export function CollectionFileItem({
                     variant="outline"
                     size="sm"
                     className="h-7 px-2 text-[10px] gap-1.5 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors"
-                    onClick={() => onIndexFile(file.id)}
+                    disabled={isIndexing}
+                    onClick={() =>
+                      file.id != null && onIndexFile(file.id.toString())
+                    }
                   >
                     <Sparkles className="h-3.5 w-3.5" />
                     Index
@@ -77,7 +95,7 @@ export function CollectionFileItem({
               variant="ghost"
               size="icon"
               className="h-7 w-7 text-muted-foreground hover:text-red-600 hover:bg-red-50"
-              onClick={() => onDelete(file.id)}
+              onClick={() => file.id != null && onDelete(file.id.toString())}
             >
               <Trash2 className="h-4 w-4" />
             </Button>

@@ -11,6 +11,7 @@ from user.authentication import CookieJWTAuth
 from chat.models import Conversation, RAGCollection, RAGDocument
 from chat.schema import CreateRAGCollectionSchema, RAGCollectionListSchema
 from chat.tasks import start_indexing_documents
+from django_celery_results.models import TaskResult
 from chat.llm_service import llm_model
 from chat.schema import (
     PublicChatRequestSchema,
@@ -135,7 +136,6 @@ def get_user_conversations_list(request: HttpRequest):
     conversations = Conversation.objects.filter(user=request.auth).values(
         "id", "conversation_title"
     )
-    print(conversations)
     return [
         ConversationListResponseSchema(
             conversation_id=conversation["id"],
@@ -149,7 +149,6 @@ def get_user_conversations_list(request: HttpRequest):
     "/{conversation_id}/", response={200: SelectedConversationSchema}, auth=cookie_auth
 )
 def get_conversation(request: HttpRequest, conversation_id: UUID):
-    print(f"Getting conversation {conversation_id}")
     conversation = get_object_or_404(
         Conversation, id=conversation_id, user=request.auth
     )
@@ -332,6 +331,28 @@ def delete_rag_collection_document(request: HttpRequest, rag_collection_id: int,
         return 400, GenericSchema(detail=f"Error deleting RAG collection document: {str(e)}")
 
 
+
+@rag_collection.post(
+    "/index-document/{rag_collection_id}/document/{document_id}/",
+    response={200: GenericSchema, 202: StartIndexingResponseSchema},
+    auth=cookie_auth,
+)
+def index_rag_collection_document(request: HttpRequest, rag_collection_id: int, document_id: int):
+    rag_collection = get_object_or_404(
+        RAGCollection, id=rag_collection_id, user=request.auth
+    )
+    document = get_object_or_404(
+        RAGDocument, id=document_id, rag_collection=rag_collection
+)
+    if document.is_indexed:
+        return 200, GenericSchema(detail="Document is already indexed")
+    # start indexing document in background
+    async_result = start_indexing_documents.delay(
+        rag_collection_id, rag_collection.qdrant_collection_name,document_id
+    )
+    return 202, StartIndexingResponseSchema(task_id=async_result.id)
+
+
 @rag_collection.post(
     "/index-all-documents/{rag_collection_id}/",
     response={200: GenericSchema, 202: StartIndexingResponseSchema},
@@ -355,39 +376,61 @@ def index_all_documents(request: HttpRequest, rag_collection_id: int):
 
     return 202, StartIndexingResponseSchema(task_id=async_result.id)
 
-
-@rag_collection.post(
-    "/index-document/{rag_collection_id}/document/{document_id}/",
-    response={200: GenericSchema, 202: StartIndexingResponseSchema},
-    auth=cookie_auth,
-)
-def index_rag_collection_document(request: HttpRequest, rag_collection_id: int, document_id: int):
-    rag_collection = get_object_or_404(
-        RAGCollection, id=rag_collection_id, user=request.auth
-    )
-    document = get_object_or_404(
-        RAGDocument, id=document_id, rag_collection=rag_collection
-)
-    if document.is_indexed:
-        return 200, GenericSchema(detail="Document is already indexed")
-    # start indexing document in background
-    async_result = start_indexing_documents.delay(
-        rag_collection_id, rag_collection.qdrant_collection_name,
-    )
-    return 202, StartIndexingResponseSchema(task_id=async_result.id)
-
-
 @rag_collection.get(
     "/indexing-status/{task_id}/",
-    response={202: IndexingStatusResponseSchema, 200: GenericSchema},
+    response={202: IndexingStatusResponseSchema, 400: GenericSchema},
     auth=cookie_auth,
 )
-def get_indexing_status(request: HttpRequest, task_id: str):
+def get_indexing_status(request: HttpRequest, task_id: str, document_id: str = None):
+    print("\n" + "="*60)
+    print(f"DEBUG: get_indexing_status called")
+    print(f"DEBUG: task_id: {task_id}")
+    print(f"DEBUG: document_id: {document_id} (Type: {type(document_id)})")
+    print("="*60 + "\n")
+  
     async_result = start_indexing_documents.AsyncResult(task_id)
-    if not async_result.result:
-        return 200, GenericSchema(detail="No Indexing Task Found")
+    print(f"DEBUG: async_result: {async_result}")
+    print(f"DEBUG: async_result.status: {async_result.status}")
+    
+    info = async_result.info
+    print(f"DEBUG: async_result.info: {info}")
+    print("-" * 40)
+
+    if not info:   
+        print("DEBUG: 'info' is empty. Attempting to fetch TaskResult from DB...")
+        try:
+            task_result = TaskResult.objects.get(task_id=task_id)
+            print(f"DEBUG: Found TaskResult in DB: {task_result}")
+            print(f"DEBUG: TaskResult.status: {task_result.status}")
+            if task_result.status == "SUCCESS":
+                return 202, IndexingStatusResponseSchema(
+                    status=task_result.status,
+                    progress=100,
+                    message="Indexing completed successfully",
+                )
+            elif task_result.status == "FAILURE":
+                return 202, IndexingStatusResponseSchema(
+                    status=task_result.status,
+                    progress=0,
+                    message="Indexing failed",
+                )
+          
+        except TaskResult.DoesNotExist:
+           return 400, GenericSchema(detail="No Indexing Task Found")
+    
+    progress = 0
+    message = None
+    if isinstance(info, dict):
+        progress = info.get("progress", 0)
+        message = info.get("message")
+    elif async_result.status == 'SUCCESS':
+        progress = 100
+    elif async_result.status == 'FAILURE':
+        message = str(info)
+
+    print(f"DEBUG: Returning 202 (AsyncResult) - Status: {async_result.status}, Progress: {progress}, Message: {message}")
     return 202, IndexingStatusResponseSchema(
         status=async_result.status,
-        progress=async_result.meta.get("progress"),
-        message=async_result.meta.get("message"),
+        progress=progress,
+        message=message,
     )

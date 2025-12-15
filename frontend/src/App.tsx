@@ -4,8 +4,9 @@ import Layout from "@/components/Layout";
 import Chat from "@/pages/Chat";
 import Collections from "@/pages/Collections";
 import { AuthProvider } from "@/contexts/AuthProvider";
-import { CollectionsProvider } from "@/contexts/CollectionsContext";
+import { CollectionsProvider } from "@/contexts/CollectionsProvider";
 import { Toaster } from "sonner";
+import { useEffect } from "react";
 
 const routes = [
   {
@@ -22,6 +23,10 @@ const routes = [
 const router = createBrowserRouter(routes);
 
 export default function App() {
+  // clear globacl catch on refresh
+  useEffect(() => {
+    localStorage.clear();
+  }, []);
   return (
     <AuthProvider>
       <GoogleOAuthProvider

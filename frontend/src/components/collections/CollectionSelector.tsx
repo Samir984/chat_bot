@@ -3,7 +3,7 @@ import { Plus, Folder, Search, CheckCircle2, Ban } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import type { RAGCollectionListSchema } from "@/gen/types/RAGCollectionListSchema";
-import { useCollections } from "@/contexts/CollectionsContext";
+import { useCollections } from "@/contexts/CollectionsProvider";
 
 interface CollectionSelectorProps {
   selectedCollection: RAGCollectionListSchema | null;

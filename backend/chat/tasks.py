@@ -1,4 +1,5 @@
 import tempfile
+from typing import Optional
 import os
 from celery import shared_task
 from django.core.files.storage import default_storage
@@ -10,17 +11,21 @@ from chat.qdrant_client import get_or_create_vector_store
 
 @shared_task(bind=True)
 def start_indexing_documents(
-    self, rag_collection_id: int, qdrant_collection_name: str, document_id: int
+    self, rag_collection_id: int, qdrant_collection_name: str, document_id: Optional[int]=None
 ):
     # Import vector_store inside the function to avoid initializing embeddings at import time
-    print("Starting indexing documents")
+    print("Starting indexing documents",rag_collection_id, qdrant_collection_name, document_id)
 
     self.update_state(state="PROGRESS", meta={"progress": 0})
 
     unindexed_documents = RAGDocument.objects.filter(
-        rag_collection_id=rag_collection_id, is_indexed=False, id=document_id
+        rag_collection_id=rag_collection_id, is_indexed=False
     )
+    if document_id:
+        unindexed_documents = unindexed_documents.filter(id=document_id)
+    print("unindexed_documents",unindexed_documents)   
     vector_store = get_or_create_vector_store(qdrant_collection_name)
+
 
     # Text splitter configuration
     # chunk_size is in CHARACTERS, not words
@@ -78,15 +83,17 @@ def start_indexing_documents(
 
             except Exception as e:
                 # Don't mark as indexed if there was an error
+                print(f"Error indexing document {document.original_document_name}",str(e))
                 self.update_state(state="FAILURE", meta={"message": str(e)})
-                continue
+                raise e
             finally:
-
                 if os.path.exists(temp_path):
                     os.unlink(temp_path)
 
         except Exception as e:
             print(f"Error indexing document {document.id}: {str(e)}")
-            continue
+            self.update_state(state="FAILURE", meta={"message": str(e)})
+            raise e
+            
     print("Indexing documents completed")
     self.update_state(state="SUCCESS", meta={"progress": 100})

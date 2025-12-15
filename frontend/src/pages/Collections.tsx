@@ -2,7 +2,7 @@ import { CreateCollectionDialog } from "@/components/collections/CreateCollectio
 import CollectionCard from "@/components/collections/CollectionCard";
 import { RenderData } from "@/components/RenderData";
 import { Library, CircleX } from "lucide-react";
-import { useCollections } from "@/contexts/CollectionsContext";
+import { useCollections } from "@/contexts/CollectionsProvider";
 
 export default function Collections() {
   const {
@@ -15,6 +15,7 @@ export default function Collections() {
     deleteCollection,
     renameCollection,
     addFilesToCollection,
+    refetch,
   } = useCollections();
 
   return (
@@ -71,15 +72,8 @@ export default function Collections() {
                 return (
                   <CollectionCard
                     key={collectionId}
-                    name={collection.rag_collection_name}
-                    files={
-                      collection.documents?.map((d) => ({
-                        id: d.id?.toString() || "",
-                        name:
-                          d.original_document_name || d.unique_document_name,
-                        isIndexed: d.is_indexed || false,
-                      })) || []
-                    }
+                    refetch={refetch}
+                    collection={collection}
                     onIndexFile={(fileId) => indexFile(collectionId, fileId)}
                     onIndexAll={() => indexAll(collectionId)}
                     onDeleteFile={(fileId) => deleteFile(collectionId, fileId)}

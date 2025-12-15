@@ -7,6 +7,12 @@ from chat.api import rag_collection as rag_collection_router
 api = NinjaAPI(
     title="Chat Bot API", version="1.0.0", description="Chat Bot API", docs_url="/docs"
 )
+from typing import Any, Optional
+@api.get("/weapons")
+def list_weapons(request, limit: int = 10, offset: int = None):
+    print("limit", limit)
+    print("offset", offset)
+    return 200, "nice"
 
 
 api.add_router("users/", users_router, tags=["users"])

@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, UploadCloud, FileText, X } from "lucide-react";
 import { Label } from "@/components/ui/label";
-import { useCollections } from "@/contexts/CollectionsContext";
+import { useCollections } from "@/contexts/CollectionsProvider";
 import { GenericCreateEditModal } from "@/common/GenericCreateEditModal";
 import { useFileUpload } from "@/hooks/useFileUpload";
 
