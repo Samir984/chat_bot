@@ -1,0 +1,100 @@
+version: "3.8"
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: chatbot_postgres
+    environment:
+      POSTGRES_DB: chatbot
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - chatbot_network
+    restart: unless-stopped
+
+  # Redis
+  redis:
+    image: redis:7-alpine
+    container_name: chatbot_redis
+    command: redis-server --maxmemory 128mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - chatbot_network
+    restart: unless-stopped
+
+  # Qdrant Vector Database
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: chatbot_qdrant
+    volumes:
+      - qdrant_data:/qdrant/storage
+    ports:
+      - "6333:6333"
+    networks:
+      - chatbot_network
+    restart: unless-stopped
+
+  # Django Backend - REPLACE WITH YOUR DOCKER HUB USERNAME
+  backend:
+    image: samir984/chatbot-backend:latest
+    container_name: chatbot_backend
+    command: gunicorn --bind 0.0.0.0:8000 --workers 2 --threads 2 --timeout 120 chat_bot.wsgi:application
+    volumes:
+      - static_volume:/app/static
+      - media_volume:/app/media
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./backend/.env
+    environment:
+      - POSTGRES_HOST=postgres
+      - REDIS_HOST=redis
+      - QDRANT_HOST=qdrant
+    depends_on:
+      - postgres
+      - redis
+      - qdrant
+    networks:
+      - chatbot_network
+    restart: unless-stopped
+
+  # Celery Worker
+  celery_worker:
+    image: samir984/chatbot-backend:latest
+    container_name: chatbot_celery_worker
+    command: celery -A chat_bot worker --loglevel=info --pool=solo --concurrency=1
+    volumes:
+      - media_volume:/app/media
+    env_file:
+      - ./backend/.env
+    environment:
+      - POSTGRES_HOST=postgres
+      - REDIS_HOST=redis
+      - QDRANT_HOST=qdrant
+    depends_on:
+      - postgres
+      - redis
+      - qdrant
+      - backend
+    networks:
+      - chatbot_network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+  qdrant_data:
+  static_volume:
+  media_volume:
+
+networks:
+  chatbot_network:
+    driver: bridge

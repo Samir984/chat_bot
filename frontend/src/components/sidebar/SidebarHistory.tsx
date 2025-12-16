@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import SidebarHistoryItem from "./SidebarHistoryItem";
 
 import {
@@ -18,7 +18,6 @@ export function SidebarHistory() {
 
   const {
     data: recentChats,
-    setData: setRecentChats,
     isLoading,
     error,
     refetch,

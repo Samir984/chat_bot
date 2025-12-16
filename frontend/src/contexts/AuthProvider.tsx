@@ -25,7 +25,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isAuthenticate, setIsAuthenticate] = useState(false);
   const [user, setUser] = useState<UserApiGoogleLogin200 | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function getMe() {
@@ -42,7 +41,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (error) {
         setIsAuthenticate(false);
         setUser(null);
-        setError(error);
       }
       setIsLoading(false);
     }

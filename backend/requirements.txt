@@ -19,3 +19,5 @@ qdrant-client
 google-auth
 requests
 django-cors-headers
+gunicorn
+whitenoise-spa

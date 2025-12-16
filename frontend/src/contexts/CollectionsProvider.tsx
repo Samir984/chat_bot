@@ -35,7 +35,6 @@ interface CollectionsProviderProps {
 export function CollectionsProvider({ children }: CollectionsProviderProps) {
   const {
     data: collections,
-    setData: setCollections,
     isLoading,
     error,
     refetch,

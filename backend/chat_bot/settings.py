@@ -60,6 +60,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise_spa.middleware.WhiteNoiseSPAMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -71,6 +72,12 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = "chat_bot.urls"
+WHITENOISE_SPA_ROOT = BASE_DIR / "dist"
+WHITENOISE_SPA_URL_PATTERN = (
+    r"^/(?:|login(?:/.*)?|/?|register/?|collections/?|chat/?/|conversation(?:/.*)?)$"
+)
+
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "0.0.0.0", "::1"]
 
 TEMPLATES = [
     {
