@@ -48,7 +48,7 @@ services:
     container_name: chatbot_backend
     command: gunicorn --bind 0.0.0.0:8000 --workers 2 --threads 2 --timeout 120 chat_bot.wsgi:application
     volumes:
-      - static_volume:/app/static
+      - static_volume:/app/staticfiles
       - media_volume:/app/media
     ports:
       - "8000:8000"
