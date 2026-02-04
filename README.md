@@ -1,4 +1,4 @@
-# AI Chatbot with RAG
+# AgenticRAG
 
 A powerful Request-Augmented Generation (RAG) chatbot application that allows users to create knowledge collections, upload documents, and chat with an AI that understands the context of your data.
 
