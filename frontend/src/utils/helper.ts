@@ -4,18 +4,24 @@ export const hasData = <T>(data: T[] | null | undefined): boolean => {
 };
 
 export const computeHeaders = (
-  dataFormat?: DataFormat
+  dataFormat?: DataFormat,
 ): Record<string, string> => {
-  return dataFormat === "form-data"
-    ? {}
-    : {
-        "Content-Type": "application/json",
-      };
+  const csrfToken = document.cookie
+    .split("; ")
+    .find((row) => row.startsWith("csrftoken="))
+    ?.split("=")[1];
+  console.log("CSRF Token:", csrfToken);
+  return {
+    ...(dataFormat === "form-data"
+      ? {}
+      : { "Content-Type": "application/json" }),
+    ...(csrfToken ? { "X-CSRFToken": csrfToken } : {}),
+  };
 };
 
 export const computeBody = (
   body?: unknown,
-  dataFormat?: DataFormat
+  dataFormat?: DataFormat,
 ): unknown => {
   return dataFormat === "form-data" ? body : JSON.stringify(body);
 };

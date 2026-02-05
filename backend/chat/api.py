@@ -92,6 +92,7 @@ def send_message(request: HttpRequest, data: ChatRequestSchema):
         existing_history = conversation.history if conversation else []
         history_messages = build_messages_from_history(existing_history, data.prompt)
         messages.extend(history_messages)
+        
  
         message = llm_model.invoke(messages, max_retries=0)
 

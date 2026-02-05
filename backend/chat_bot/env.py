@@ -4,6 +4,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Environment(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
     DEBUG: bool = False
+    mode: str = "development"
     POSTGRES_DB: str = "chatbot"
     POSTGRES_USER: str = "postgres"
     POSTGRES_PASSWORD: str = "mysecretpassword"
