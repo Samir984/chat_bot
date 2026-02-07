@@ -1,8 +1,7 @@
 from typing import List, Optional
 from uuid import UUID
 from chat_bot.env import ENV
-from langchain_core.messages import AIMessage
-from django.http import HttpRequest
+from django.http import HttpRequest, StreamingHttpResponse
 from django.shortcuts import get_object_or_404
 from django.db import transaction
 
@@ -12,6 +11,8 @@ from chat.models import Conversation, RAGCollection, RAGDocument
 from chat.schema import CreateRAGCollectionSchema, RAGCollectionListSchema
 from chat.tasks import start_indexing_documents
 from django_celery_results.models import TaskResult
+
+
 from chat.llm_service import llm_model
 from chat.schema import (
     PublicChatRequestSchema,
@@ -23,11 +24,11 @@ from chat.schema import (
     StartIndexingResponseSchema,
     IndexingStatusResponseSchema,
 )
-from chat.choices import RoleChoices
 from chat.utils import (
     build_messages_from_history,
     validate_documents,
     build_rag_system_message,
+    stream_llm_response
 )
 from chat.qdrant_client import (
     get_vector_store,
@@ -51,7 +52,9 @@ def public_send_message(request: HttpRequest, data: PublicChatRequestSchema):
 
 
 # For authenticated users
-@chat.post("/", response={200: ChatResponseSchema, 400: GenericSchema}, auth=cookie_auth)
+@chat.post(
+    "/", response={200: ChatResponseSchema, 400: GenericSchema}, auth=cookie_auth
+)
 def send_message(request: HttpRequest, data: ChatRequestSchema):
     user = request.auth
     conversation = None
@@ -92,31 +95,18 @@ def send_message(request: HttpRequest, data: ChatRequestSchema):
         existing_history = conversation.history if conversation else []
         history_messages = build_messages_from_history(existing_history, data.prompt)
         messages.extend(history_messages)
-        
- 
-        message = llm_model.invoke(messages, max_retries=0)
 
-        if message.content:
-            updated_history = [
-                *existing_history,
-                {"role": RoleChoices.USER, "content": data.prompt},
-                {"role": RoleChoices.AI, "content": message.content},
-            ]
-
-            if not data.conversation_id:
-                conversation = Conversation.objects.create(
-                    user=user,
-                    conversation_title=data.prompt[:50],
-                    history=updated_history,
-                )
-            else:
-                conversation.history = updated_history
-                conversation.save()
+        # Stream the response and capture the final output
+        response = StreamingHttpResponse(
+            stream_llm_response(
+                messages=messages,
+                user=user,
+                prompt=data.prompt,
+                conversation_id=data.conversation_id), content_type="text/plain"
+        )
     
-        
-            return 200, ChatResponseSchema(
-                conversation_id=conversation.id, content=message.content
-            )
+
+        return response
 
     except Exception as e:
         print("Error in send_message:", str(e))
@@ -152,16 +142,20 @@ def get_conversation(request: HttpRequest, conversation_id: UUID):
 
 
 @conversation.patch(
-    "/{conversation_id}/", response={200: GenericSchema, 400: GenericSchema}, auth=cookie_auth
+    "/{conversation_id}/",
+    response={200: GenericSchema, 400: GenericSchema},
+    auth=cookie_auth,
 )
-def update_conversation(request: HttpRequest, conversation_id: UUID, conversation_title: str):
-        conversation = get_object_or_404(
-            Conversation, id=conversation_id, user=request.auth
-        )
-        conversation.conversation_title = conversation_title
-        conversation.save()
-        return 200, GenericSchema(detail="Conversation updated successfully")
-   
+def update_conversation(
+    request: HttpRequest, conversation_id: UUID, conversation_title: str
+):
+    conversation = get_object_or_404(
+        Conversation, id=conversation_id, user=request.auth
+    )
+    conversation.conversation_title = conversation_title
+    conversation.save()
+    return 200, GenericSchema(detail="Conversation updated successfully")
+
 
 @conversation.delete(
     "/{conversation_id}/", response={200: GenericSchema}, auth=cookie_auth
@@ -283,19 +277,19 @@ def delete_rag_collection(request: HttpRequest, rag_collection_id: int):
     qdrant_collection_name = rag_collection.qdrant_collection_name
     documents = list(rag_collection.documents.all())
 
-
     for document in documents:
         if document.document_path:
             document.document_path.delete(save=False)
         document.delete()
 
-   
     if qdrant_collection_name:
         delete_vector_collection(qdrant_collection_name)
 
     rag_collection.delete()
 
-    return 200, GenericSchema(detail="RAG collection and documents deleted successfully")
+    return 200, GenericSchema(
+        detail="RAG collection and documents deleted successfully"
+    )
 
 
 @rag_collection.delete(
@@ -303,7 +297,9 @@ def delete_rag_collection(request: HttpRequest, rag_collection_id: int):
     response={200: GenericSchema},
     auth=cookie_auth,
 )
-def delete_rag_collection_document(request: HttpRequest, rag_collection_id: int, document_id: int):
+def delete_rag_collection_document(
+    request: HttpRequest, rag_collection_id: int, document_id: int
+):
     try:
         rag_collection = get_object_or_404(
             RAGCollection, id=rag_collection_id, user=request.auth
@@ -322,8 +318,9 @@ def delete_rag_collection_document(request: HttpRequest, rag_collection_id: int,
         document.delete()
         return 200, GenericSchema(detail="RAG collection document deleted successfully")
     except Exception as e:
-        return 400, GenericSchema(detail=f"Error deleting RAG collection document: {str(e)}")
-
+        return 400, GenericSchema(
+            detail=f"Error deleting RAG collection document: {str(e)}"
+        )
 
 
 @rag_collection.post(
@@ -331,18 +328,20 @@ def delete_rag_collection_document(request: HttpRequest, rag_collection_id: int,
     response={200: GenericSchema, 202: StartIndexingResponseSchema},
     auth=cookie_auth,
 )
-def index_rag_collection_document(request: HttpRequest, rag_collection_id: int, document_id: int):
+def index_rag_collection_document(
+    request: HttpRequest, rag_collection_id: int, document_id: int
+):
     rag_collection = get_object_or_404(
         RAGCollection, id=rag_collection_id, user=request.auth
     )
     document = get_object_or_404(
         RAGDocument, id=document_id, rag_collection=rag_collection
-)
+    )
     if document.is_indexed:
         return 200, GenericSchema(detail="Document is already indexed")
     # start indexing document in background
     async_result = start_indexing_documents.delay(
-        rag_collection_id, rag_collection.qdrant_collection_name,document_id
+        rag_collection_id, rag_collection.qdrant_collection_name, document_id
     )
     return 202, StartIndexingResponseSchema(task_id=async_result.id)
 
@@ -370,6 +369,7 @@ def index_all_documents(request: HttpRequest, rag_collection_id: int):
 
     return 202, StartIndexingResponseSchema(task_id=async_result.id)
 
+
 @rag_collection.get(
     "/indexing-status/{task_id}/",
     response={202: IndexingStatusResponseSchema, 400: GenericSchema},
@@ -379,7 +379,7 @@ def get_indexing_status(request: HttpRequest, task_id: str, document_id: str = N
     async_result = start_indexing_documents.AsyncResult(task_id)
     info = async_result.info
 
-    if not info:   
+    if not info:
         try:
             task_result = TaskResult.objects.get(task_id=task_id)
             if task_result.status == "SUCCESS":
@@ -394,18 +394,18 @@ def get_indexing_status(request: HttpRequest, task_id: str, document_id: str = N
                     progress=0,
                     message="Indexing failed",
                 )
-          
+
         except TaskResult.DoesNotExist:
-           return 400, GenericSchema(detail="No Indexing Task Found")
-    
+            return 400, GenericSchema(detail="No Indexing Task Found")
+
     progress = 0
     message = None
     if isinstance(info, dict):
         progress = info.get("progress", 0)
         message = info.get("message")
-    elif async_result.status == 'SUCCESS':
+    elif async_result.status == "SUCCESS":
         progress = 100
-    elif async_result.status == 'FAILURE':
+    elif async_result.status == "FAILURE":
         message = str(info)
 
     return 202, IndexingStatusResponseSchema(

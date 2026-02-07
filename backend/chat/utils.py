@@ -1,6 +1,8 @@
 from typing import Union, List, Dict, Any
 import os
 from ninja import UploadedFile
+from chat.llm_service import llm_model
+from chat.models import Conversation
 
 from langchain_core.messages import HumanMessage, AIMessage
 
@@ -71,6 +73,25 @@ def validate_documents(
             return False, f"Error reading file '{file.name}': {str(e)}"
 
     return True, ""
+
+
+def stream_llm_response(messages: list, user, prompt, conversation_id=None):
+    full_llm_reponse = ""
+    try:
+        for chunk in llm_model.stream(messages):
+            full_llm_reponse += chunk.content
+            yield chunk.content 
+        
+        if full_llm_reponse:
+            Conversation.update_or_create_conversation(
+                user=user, 
+                prompt=prompt, 
+                full_response=full_llm_reponse, 
+                conversation_id=conversation_id
+            )
+                   
+    except Exception as e:
+        yield f"Error: {str(e)}"
 
 
 def build_rag_system_message(context_text: str) -> str:

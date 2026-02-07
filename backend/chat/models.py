@@ -3,6 +3,7 @@ import uuid
 import os
 from django.db import models
 from django.contrib.auth import get_user_model
+from chat.choices import RoleChoices
 
 
 User = get_user_model()
@@ -16,6 +17,23 @@ class Conversation(models.Model):
     date_created = models.DateTimeField(auto_now_add=True)
     date_modified = models.DateTimeField(auto_now=True)
 
+    @staticmethod
+    def update_or_create_conversation(user, prompt, full_response, conversation_id=None):
+        if conversation_id:
+            conversation = Conversation.objects.get(id=conversation_id, user=user)
+            existing_history = conversation.history
+        else:
+            conversation = Conversation(user=user, conversation_title=prompt[:50])
+            existing_history = []
+
+        conversation.history = [
+            *existing_history,
+            {"role": RoleChoices.USER, "content": prompt},
+            {"role": RoleChoices.AI, "content": full_response},
+        ]
+        conversation.save()
+
+        return conversation
     class Meta:
         ordering = ["-date_created"]
 
