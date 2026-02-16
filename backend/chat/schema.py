@@ -13,6 +13,13 @@ class ChatResponseSchema(Schema):
     content: str
 
 
+class ChatStreamChunkSchema(Schema):
+    type: Literal["content", "end", "error"]
+    content: Optional[str] = None
+    conversation_id: Optional[str] = None
+    error: Optional[str] = None
+
+
 class MessageSchema(Schema):
     role: RoleChoices
     content: str

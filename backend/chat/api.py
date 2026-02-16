@@ -17,6 +17,7 @@ from chat.llm_service import llm_model
 from chat.schema import (
     PublicChatRequestSchema,
     ChatResponseSchema,
+    ChatStreamChunkSchema,
     ChatRequestSchema,
     GenericSchema,
     SelectedConversationSchema,
@@ -44,7 +45,7 @@ rag_collection = Router()
 
 
 # For unauthenticated users
-@chat.post("/public/", response={200: ChatResponseSchema})
+@chat.post("/public/", response={200: ChatStreamChunkSchema})
 def public_send_message(request: HttpRequest, data: PublicChatRequestSchema):
     messages = build_messages_from_history(data.history, data.prompt)
     response = StreamingHttpResponse(
@@ -62,7 +63,7 @@ def public_send_message(request: HttpRequest, data: PublicChatRequestSchema):
 
 # For authenticated users
 @chat.post(
-    "/", response={200: ChatResponseSchema, 400: GenericSchema}, auth=cookie_auth
+    "/", response={200: ChatStreamChunkSchema, 400: GenericSchema}, auth=cookie_auth
 )
 def send_message(request: HttpRequest, data: ChatRequestSchema):
     user = request.auth
