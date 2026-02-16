@@ -5,7 +5,6 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from chat.choices import RoleChoices
 
-
 User = get_user_model()
 
 
@@ -18,7 +17,9 @@ class Conversation(models.Model):
     date_modified = models.DateTimeField(auto_now=True)
 
     @staticmethod
-    def update_or_create_conversation(user, prompt, full_response, conversation_id=None):
+    def update_or_create_conversation(
+        user, prompt, full_response, conversation_id=None
+    ):
         if conversation_id:
             conversation = Conversation.objects.get(id=conversation_id, user=user)
             existing_history = conversation.history
@@ -34,6 +35,7 @@ class Conversation(models.Model):
         conversation.save()
 
         return conversation
+
     class Meta:
         ordering = ["-date_created"]
 

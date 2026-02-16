@@ -10,7 +10,6 @@ from qdrant_client.http.models import (
 )
 from chat.embedding_mode import embeddings_model as embeddings
 
-
 qdrant_client = QdrantClient(host=ENV.QDRANT_HOST, port=ENV.QDRANT_PORT)
 
 

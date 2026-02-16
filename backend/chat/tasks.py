@@ -11,10 +11,18 @@ from chat.qdrant_client import get_or_create_vector_store
 
 @shared_task(bind=True)
 def start_indexing_documents(
-    self, rag_collection_id: int, qdrant_collection_name: str, document_id: Optional[int]=None
+    self,
+    rag_collection_id: int,
+    qdrant_collection_name: str,
+    document_id: Optional[int] = None,
 ):
     # Import vector_store inside the function to avoid initializing embeddings at import time
-    print("Starting indexing documents",rag_collection_id, qdrant_collection_name, document_id)
+    print(
+        "Starting indexing documents",
+        rag_collection_id,
+        qdrant_collection_name,
+        document_id,
+    )
 
     self.update_state(state="PROGRESS", meta={"progress": 0})
 
@@ -23,9 +31,8 @@ def start_indexing_documents(
     )
     if document_id:
         unindexed_documents = unindexed_documents.filter(id=document_id)
-    print("unindexed_documents",unindexed_documents)   
+    print("unindexed_documents", unindexed_documents)
     vector_store = get_or_create_vector_store(qdrant_collection_name)
-
 
     # Text splitter configuration
     # chunk_size is in CHARACTERS, not words
@@ -83,7 +90,9 @@ def start_indexing_documents(
 
             except Exception as e:
                 # Don't mark as indexed if there was an error
-                print(f"Error indexing document {document.original_document_name}",str(e))
+                print(
+                    f"Error indexing document {document.original_document_name}", str(e)
+                )
                 self.update_state(state="FAILURE", meta={"message": str(e)})
                 raise e
             finally:
@@ -94,6 +103,6 @@ def start_indexing_documents(
             print(f"Error indexing document {document.id}: {str(e)}")
             self.update_state(state="FAILURE", meta={"message": str(e)})
             raise e
-            
+
     print("Indexing documents completed")
     self.update_state(state="SUCCESS", meta={"progress": 100})

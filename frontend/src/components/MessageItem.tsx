@@ -2,22 +2,28 @@ import { cn } from "@/lib/utils";
 import { Bot, User } from "lucide-react";
 import type { ChatMessage } from "@/types/chat";
 
-type MessageItemProps = Omit<ChatMessage, "id">;
+type MessageItemProps = Omit<ChatMessage, "id"> & {
+  streaming?: boolean;
+};
 
-export default function MessageItem({ role, content, type }: MessageItemProps) {
+export default function MessageItem({
+  role,
+  content,
+  type,
+}: MessageItemProps) {
   const isUser = role === "user";
 
   return (
     <div
       className={cn(
         "flex w-full items-start gap-4 p-4",
-        isUser ? "flex-row-reverse" : "flex-row"
+        isUser ? "flex-row-reverse" : "flex-row",
       )}
     >
       <div
         className={cn(
           "flex h-8 w-8 shrink-0 items-center justify-center rounded-full border",
-          isUser ? "bg-primary text-primary-foreground" : "bg-muted"
+          isUser ? "bg-primary text-primary-foreground" : "bg-muted",
         )}
       >
         {isUser ? <User size={16} /> : <Bot size={16} />}
@@ -32,10 +38,10 @@ export default function MessageItem({ role, content, type }: MessageItemProps) {
           !isUser && type === "INTERRUPTED"
             ? "bg-muted/60 border border-dashed border-slate-200 text-muted-foreground"
             : !isUser && type === "ERROR"
-            ? "bg-rose-50 border border-rose-200 text-rose-900"
-            : !isUser
-            ? "bg-muted"
-            : ""
+              ? "bg-rose-50 border border-rose-200 text-rose-900"
+              : !isUser
+                ? "bg-muted"
+                : "",
         )}
       >
         {type === "INTERRUPTED" && !isUser && (
@@ -48,7 +54,7 @@ export default function MessageItem({ role, content, type }: MessageItemProps) {
             "whitespace-pre-wrap",
             type === "INTERRUPTED"
               ? "italic opacity-80 text-muted-foreground"
-              : ""
+              : "",
           )}
         >
           {content}

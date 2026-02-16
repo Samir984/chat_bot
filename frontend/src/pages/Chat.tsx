@@ -2,11 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import MessageList from "@/components/MessageList";
 import ChatInput from "@/components/chat/ChatInput";
 import { useAuth } from "@/contexts/AuthProvider";
-import { fetchApi } from "@/services/api";
+import { fetchApi, streamApi } from "@/services/api";
 import { toast } from "sonner";
 import {
   roleChoicesEnum,
-  type ChatResponseSchema,
   type RAGCollectionListSchema,
   type SelectedConversationSchema,
 } from "@/gen/types";
@@ -44,7 +43,7 @@ export default function Chat() {
         `/conversation/${id}/`,
         "GET",
         undefined,
-        abortController.signal
+        abortController.signal,
       );
       if (abortController.signal.aborted) {
         return;
@@ -55,14 +54,14 @@ export default function Chat() {
             id: uuidv4(),
             role: message.role,
             content: message.content,
-          }))
+          })),
         );
       }
       if (error) {
         toast.error(
           isNotObjectObjectString(error)
             ? error
-            : "Error fetching conversation history"
+            : "Error fetching conversation history",
         );
       }
       setIsLoadingChat(false);
@@ -82,76 +81,10 @@ export default function Chat() {
 
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  // for unauthenticated users
-  const publicChatHandler = async (prompt: string) => {
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-      abortControllerRef.current = null;
-    }
-
-    const userMsg: Message = {
-      id: Date.now().toString(),
-      role: roleChoicesEnum.user,
-      content: prompt,
-    };
-
-    setMessages((prev) => [...prev, userMsg]);
-    setIsChatting(true);
-
-    const abortController = new AbortController();
-    abortControllerRef.current = abortController;
-
-    const { data, error } = await fetchApi<ChatResponseSchema>(
-      "/chat/public/",
-      "POST",
-      { prompt, history: filterHistoryMessages(messages) },
-      abortController.signal
-    );
-
-    if (abortController.signal.aborted) {
-      const stoppedMsg: Message = {
-        id: Date.now().toString(),
-        role: roleChoicesEnum.ai,
-        content: "You stopped the response",
-        type: "INTERRUPTED",
-      };
-
-      setMessages((prev) => [...prev, stoppedMsg]);
-      if (abortControllerRef.current === abortController) {
-        abortControllerRef.current = null;
-      }
-    }
-
-    if (data) {
-      const aiMsg: Message = {
-        id: Date.now().toString(),
-        role: "ai",
-        content: data.content,
-      };
-      setMessages((prev) => [...prev, aiMsg]);
-    }
-
-    if (error && !abortController.signal.aborted) {
-      toast.error(error.slice(0, 100).split(".")[0]);
-      const errorMsg: Message = {
-        id: Date.now().toString(),
-        role: "ai",
-        content: `Error: ${error.slice(0, 100).split(".")[0]}`,
-        type: "ERROR",
-      };
-      setMessages((prev) => [...prev, errorMsg]);
-    }
-
-    setIsChatting(false);
-    if (abortControllerRef.current === abortController) {
-      abortControllerRef.current = null;
-    }
-  };
-
-  // for authenticated users
+  // unified chat handler for both authenticated and public users
   const chatHandler = async (
     prompt: string,
-    collection: RAGCollectionListSchema | null
+    collection: RAGCollectionListSchema | null,
   ) => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
@@ -159,7 +92,7 @@ export default function Chat() {
     }
 
     const userMsg: Message = {
-      id: Date.now().toString(),
+      id: uuidv4(),
       role: roleChoicesEnum.user,
       content: prompt,
     };
@@ -170,53 +103,78 @@ export default function Chat() {
     const abortController = new AbortController();
     abortControllerRef.current = abortController;
 
-    const { data, error } = await fetchApi<ChatResponseSchema>(
-      "/chat/",
-      "POST",
+    const aiMsgId = uuidv4();
+    const url = isAuthenticate ? "/chat/" : "/chat/public/";
+    const body = isAuthenticate
+      ? {
+          conversation_id: id,
+          prompt,
+          collection_name: collection?.rag_collection_name,
+        }
+      : {
+          prompt,
+          history: filterHistoryMessages(messages),
+        };
+
+    await streamApi(
+      url,
       {
-        conversation_id: id,
-        prompt,
-        collection_name: collection?.rag_collection_name,
+        onStart: () => {
+          // Initialize the AI message when first data arrives
+          setMessages((prev) => [
+            ...prev,
+            { id: aiMsgId, role: roleChoicesEnum.ai, content: "" },
+          ]);
+          setIsChatting(false);
+        },
+        onNext: (data: any) => {
+          if (data.type === "content") {
+            setMessages((prev) =>
+              prev.map((msg) =>
+                msg.id === aiMsgId
+                  ? { ...msg, content: msg.content + data.content }
+                  : msg,
+              ),
+            );
+          } else if (data.type === "end") {
+            if (data.conversation_id) {
+              if (data.conversation_id !== id) {
+                setPreventRefetch(true);
+              }
+              navigate(`/conversation/${data.conversation_id}`);
+              setSideBarContentRefetch(true);
+            }
+          } else if (data.type === "error") {
+            toast.error(data.error);
+          }
+        },
+        onError: (error: string) => {
+          if (abortController.signal.aborted) {
+            const stoppedMsg: Message = {
+              id: uuidv4(),
+              role: roleChoicesEnum.ai,
+              content: "You stopped the response",
+              type: "INTERRUPTED",
+            };
+            setMessages((prev) => [...prev, stoppedMsg]);
+          } else {
+            toast.error(error || "An unexpected error occurred");
+            const errorMsg: Message = {
+              id: uuidv4(),
+              role: roleChoicesEnum.ai,
+              content: `Error: ${error}`,
+              type: "ERROR",
+            };
+            setMessages((prev) => [...prev, errorMsg]);
+          }
+        },
       },
-      abortController.signal
+      {
+        method: "POST",
+        body,
+        signal: abortController.signal,
+      },
     );
-
-    if (abortController.signal.aborted) {
-      const stoppedMsg: Message = {
-        id: Date.now().toString(),
-        role: roleChoicesEnum.ai,
-        content: "You stopped the response",
-        type: "INTERRUPTED",
-      };
-
-      setMessages((prev) => [...prev, stoppedMsg]);
-      if (abortControllerRef.current === abortController) {
-        abortControllerRef.current = null;
-      }
-    }
-
-    if (data) {
-      const aiMsg: Message = {
-        id: Date.now().toString(),
-        role: "ai",
-        content: data.content,
-      };
-      setMessages((prev) => [...prev, aiMsg]);
-      navigate(`/conversation/${data.conversation_id}`);
-
-      setSideBarContentRefetch(true);
-    }
-
-    if (error && !abortController.signal.aborted) {
-      toast.error(error.slice(0, 100).split(".")[0]);
-      const errorMsg: Message = {
-        id: Date.now().toString(),
-        role: "ai",
-        content: `Error: ${error.slice(0, 100).split(".")[0]}`,
-        type: "ERROR",
-      };
-      setMessages((prev) => [...prev, errorMsg]);
-    }
 
     setIsChatting(false);
     if (abortControllerRef.current === abortController) {
@@ -226,16 +184,12 @@ export default function Chat() {
 
   const handlePromptSubmit = async (
     prompt: string,
-    collection: RAGCollectionListSchema | null
+    collection: RAGCollectionListSchema | null,
   ) => {
     if (prompt.trim().length === 0) {
       return;
     }
-    if (isAuthenticate) {
-      await chatHandler(prompt, collection);
-    } else {
-      await publicChatHandler(prompt);
-    }
+    await chatHandler(prompt, collection);
   };
 
   const abortCurrentRequest = () => {

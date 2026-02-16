@@ -75,7 +75,7 @@ def google_login(request: HttpRequest, data: GoogleLoginSchema):
             return 400, GenericSchema(detail="Invalid Google token")
 
         id_info = google_response.json()
-    
+
         email = id_info.get("email")
         first_name = id_info.get("given_name", "")
         last_name = id_info.get("family_name", "")

@@ -28,7 +28,7 @@ from chat.utils import (
     build_messages_from_history,
     validate_documents,
     build_rag_system_message,
-    stream_llm_response
+    stream_llm_response,
 )
 from chat.qdrant_client import (
     get_vector_store,
@@ -47,8 +47,17 @@ rag_collection = Router()
 @chat.post("/public/", response={200: ChatResponseSchema})
 def public_send_message(request: HttpRequest, data: PublicChatRequestSchema):
     messages = build_messages_from_history(data.history, data.prompt)
-    message = llm_model.invoke(messages, max_retries=0)
-    return ChatResponseSchema(content=message.content)
+    response = StreamingHttpResponse(
+        stream_llm_response(
+            messages=messages,
+            user=None,
+            prompt=data.prompt,
+            conversation_id=None,
+            no_store=True,
+        ),
+        content_type="text/event-stream",
+    )
+    return response
 
 
 # For authenticated users
@@ -96,15 +105,15 @@ def send_message(request: HttpRequest, data: ChatRequestSchema):
         history_messages = build_messages_from_history(existing_history, data.prompt)
         messages.extend(history_messages)
 
-        # Stream the response and capture the final output
         response = StreamingHttpResponse(
             stream_llm_response(
                 messages=messages,
                 user=user,
                 prompt=data.prompt,
-                conversation_id=data.conversation_id), content_type="text/plain"
+                conversation_id=data.conversation_id,
+            ),
+            content_type="text/event-stream",
         )
-    
 
         return response
 

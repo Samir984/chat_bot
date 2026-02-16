@@ -8,6 +8,8 @@ api = NinjaAPI(
     title="Chat Bot API", version="1.0.0", description="Chat Bot API", docs_url="/docs"
 )
 from typing import Any, Optional
+
+
 @api.get("/weapons")
 def list_weapons(request, limit: int = 10, offset: int = None):
     print("limit", limit)
