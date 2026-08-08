@@ -36,10 +36,10 @@ def start_indexing_documents(
 
     # Text splitter configuration
     # chunk_size is in CHARACTERS, not words
-    # 1000 characters ≈ 150-200 words (more reasonable chunk size)
+    # 2000 characters ≈ 512 tokens (Recommended for Knowledge Base / Q&A)
     text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=1000,
-        chunk_overlap=200,
+        chunk_size=2000,
+        chunk_overlap=200,  # 10% overlap (Recommended)
         length_function=len,
     )
 
